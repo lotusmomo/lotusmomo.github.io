@@ -11,12 +11,27 @@ var FindProxyForURL = function(init, profiles) {
 }("+V2RayN-auto", {
     "+V2RayN-auto": function(url, host, scheme) {
         "use strict";
+        if (/(?:^|\.)bangumi\.moe$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)msocdn\.com$/.test(host)) return "+V2RayN";
+        if (/^admin\.microsoft\.com$/.test(host)) return "DIRECT";
+        if (/(?:^|\.)pi-review\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)truenas\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)google-analytics\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)booklist\.is$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)1lib\.domains$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)book4you\.org$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)bookos-z1\.org$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)booksc\.org$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)yadro\.ru$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)ca1lib\.org$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)bookshome\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)libsolutions\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)b-ok\.xyz$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)vzuu\.com$/.test(host)) return "DIRECT";
         if (/(?:^|\.)zlib.*\./.test(host)) return "+V2RayN";
         if (/(?:^|\.).*lib\./.test(host)) return "+V2RayN";
         if (/(?:^|\.)nvidia\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)microsoft\.com$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)google-analytics\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)ibruce\.info$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)googletagmanager\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)jsdelivr\.net$/.test(host)) return "+V2RayN";
@@ -36,7 +51,6 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)uuba\.vip$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)cloudflareworkers\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)readthedocs\.io$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)bangumi\.moe$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)tsukuba\.ac\.jp$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)gstatic\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)reddit\.com$/.test(host)) return "+V2RayN";
@@ -101,7 +115,6 @@ var FindProxyForURL = function(init, profiles) {
         if (/^pics\.daliansky\.net$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)akamaized\.net$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)dmm\.com$/.test(host)) return "DIRECT";
-        if (/^mitm\.it$/.test(host)) return "+yzu";
         if (/(?:^|\.)18comic\.org$/.test(host)) return "+V2RayN";
         if (/^pics\.daliansky\.net$/.test(host)) return "DIRECT";
         if (/^cn-hk-.*\.bilivideo\.com$/.test(host)) return "+V2RayN";
@@ -7352,9 +7365,5 @@ var FindProxyForURL = function(init, profiles) {
         "use strict";
         if (/^127\.0\.0\.1$/.test(host) || /^::1$/.test(host) || /^localhost$/.test(host) || /^10\..*\..*\./.test(host) || /^192\.168\..*\./.test(host) || /^172\.16\..*\./.test(host)) return "DIRECT";
         return "SOCKS5 127.0.0.1:1080; SOCKS 127.0.0.1:1080";
-    },
-    "+yzu": function(url, host, scheme) {
-        "use strict";
-        return "PROXY 192.168.102.14:18080";
     }
 });
