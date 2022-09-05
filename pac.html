@@ -11,12 +11,35 @@ var FindProxyForURL = function(init, profiles) {
 }("+V2RayN-auto", {
     "+V2RayN-auto": function(url, host, scheme) {
         "use strict";
+        if (/(?:^|\.)sharepoint\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)amazon\.com$/.test(host)) return "DIRECT";
+        if (/(?:^|\.)nn\.ci$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)askubuntu\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)live\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)huijistatic\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)wikimedia\.org$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)msauth\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)msftauth\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)office\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)office\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)aspnetcdn\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)akamaihd\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)azureedge\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)doubleclick\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)google\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)google-analytics\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)googleadservices\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)hdslb\.com$/.test(host)) return "DIRECT";
+        if (/(?:^|\.)googletagmanager\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)gstatic\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)mysql\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)stripe\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)cloudflare\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)bangumi\.moe$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)msocdn\.com$/.test(host)) return "+V2RayN";
         if (/^admin\.microsoft\.com$/.test(host)) return "DIRECT";
         if (/(?:^|\.)pi-review\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)truenas\.com$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)google-analytics\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)booklist\.is$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)1lib\.domains$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)book4you\.org$/.test(host)) return "+V2RayN";
@@ -33,14 +56,12 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)nvidia\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)microsoft\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)ibruce\.info$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)googletagmanager\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)jsdelivr\.net$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)loli\.net$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)daliansky\.net$/.test(host)) return "+V2RayN";
         if (/^upos-hz-mirrorakam\.akamaized\.net$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)98e\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)payssion\.com$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)hdslb\.com$/.test(host)) return "DIRECT";
         if (/(?:^|\.)apple\.com$/.test(host)) return "DIRECT";
         if (/(?:^|\.)hcaptcha\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)lnmp\.org$/.test(host)) return "+V2RayN";
@@ -52,10 +73,8 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)cloudflareworkers\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)readthedocs\.io$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)tsukuba\.ac\.jp$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)gstatic\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)reddit\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)linkedin\.com$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)google\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)redditstatic\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)vultr\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)vpsserver\.com$/.test(host)) return "+V2RayN";
@@ -65,8 +84,6 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)ethermine\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)deepl\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)researchgate\.net$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)wikimedia\.org$/.test(host)) return "+V2RayN";
-        if (/(?:^|\.)huijistatic\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)wikipedia\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)techpowerup\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)tpucdn\.com$/.test(host)) return "+V2RayN";
@@ -75,7 +92,6 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)ieee\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)afraid\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)tencent\.com$/.test(host)) return "DIRECT";
-        if (/(?:^|\.)cloudflare\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)cnblogs\.com$/.test(host)) return "DIRECT";
         if (/(?:^|\.)arxiv\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)ellpew\.xyz$/.test(host)) return "+V2RayN";
@@ -119,6 +135,12 @@ var FindProxyForURL = function(init, profiles) {
         if (/^pics\.daliansky\.net$/.test(host)) return "DIRECT";
         if (/^cn-hk-.*\.bilivideo\.com$/.test(host)) return "+V2RayN";
         if (/^gstatic\.loli\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.).*google.*\./.test(host)) return "+V2RayN";
+        if (/(?:^|\.)google$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)cdnst\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)criteo\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)openx\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)adform\.net$/.test(host)) return "+V2RayN";
         return "+__ruleListOf_V2RayN-auto";
     },
     "+__ruleListOf_V2RayN-auto": function(url, host, scheme) {
@@ -490,6 +512,7 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)wheretowatch\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)wingamestore\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)wizcrafts\.net$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)wowhead\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)vod\.wwe\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)xfinity\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)youwin\.com$/.test(host)) return "+V2RayN";
@@ -1042,6 +1065,7 @@ var FindProxyForURL = function(init, profiles) {
         if (scheme === "http" && url.indexOf(".blogspot.hk") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".blogspot.jp") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".blogspot.tw") >= 0) return "+V2RayN";
+        if (/(?:^|\.)business\.page$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)certificate-transparency\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)chrome\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)chromecast\.com$/.test(host)) return "+V2RayN";
@@ -1675,7 +1699,6 @@ var FindProxyForURL = function(init, profiles) {
         if (scheme === "http" && url.indexOf("aniscartujo.com") >= 0) return "+V2RayN";
         if (/(?:^|\.)aniscartujo\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)anobii\.com$/.test(host)) return "+V2RayN";
-        if (scheme === "http" && url.indexOf("anonymise.us") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".anonymitynetwork.com") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".anonymizer.com") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".anonymouse.org") >= 0) return "+V2RayN";
@@ -2034,6 +2057,7 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)bravotube\.net$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".brazzers.com") >= 0) return "+V2RayN";
         if (/(?:^|\.)brazzers\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)breached\.to$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".break.com") >= 0) return "+V2RayN";
         if (/(?:^|\.)break\.com$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("breakgfw.com") >= 0) return "+V2RayN";
@@ -3073,6 +3097,7 @@ var FindProxyForURL = function(init, profiles) {
         if (scheme === "http" && url.indexOf("finler.net") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".firearmsworld.net") >= 0) return "+V2RayN";
         if (/^http:\/\/firearmsworld\.net/.test(url)) return "+V2RayN";
+        if (/(?:^|\.)relay\.firefox\.com$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".fireofliberty.org") >= 0) return "+V2RayN";
         if (/(?:^|\.)fireofliberty\.org$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".firetweet.io") >= 0) return "+V2RayN";
@@ -3198,6 +3223,7 @@ var FindProxyForURL = function(init, profiles) {
         if (scheme === "http" && url.indexOf("friendfeed-media.com/e99a4ebe2fb4c1985c2a58775eb4422961aa5a2e") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf("friends-of-tibet.org") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".friendsoftibet.org") >= 0) return "+V2RayN";
+        if (/(?:^|\.)friendsoftibet\.org$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("freechina.net") >= 0) return "+V2RayN";
         if (/^http:\/\/www\.zensur\.freerk\.com\//.test(url)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("freevpn.nl") >= 0) return "+V2RayN";
@@ -3266,6 +3292,7 @@ var FindProxyForURL = function(init, profiles) {
         if (scheme === "http" && url.indexOf(".gaoming.net") >= 0) return "+V2RayN";
         if (/(?:^|\.)gaoming\.net$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("ganges.com") >= 0) return "+V2RayN";
+        if (/(?:^|\.)ganjingworld\.com$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".gaopi.net") >= 0) return "+V2RayN";
         if (/^http:\/\/gaopi\.net/.test(url)) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".gaozhisheng.org") >= 0) return "+V2RayN";
@@ -5053,6 +5080,7 @@ var FindProxyForURL = function(init, profiles) {
         if (scheme === "http" && url.indexOf(".pastie.org") >= 0) return "+V2RayN";
         if (/(?:^|\.)pastie\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)blog\.pathtosharepoint\.com$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)patreon\.com$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("pbs.org/wgbh/pages/frontline/tankman") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf("pbs.org/wgbh/pages/frontline/tibet") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf("video.pbs.org") >= 0) return "+V2RayN";
@@ -5273,6 +5301,7 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)privoxy\.org$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)procopytips\.com$/.test(host)) return "+V2RayN";
         if (/(?:^|\.)project-syndicate\.org$/.test(host)) return "+V2RayN";
+        if (/(?:^|\.)proton\.me$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("provideocoalition.com") >= 0) return "+V2RayN";
         if (/(?:^|\.)prosiben\.de$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("proxifier.com") >= 0) return "+V2RayN";
@@ -5591,6 +5620,7 @@ var FindProxyForURL = function(init, profiles) {
         if (/(?:^|\.)seezone\.net$/.test(host)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("sejie.com") >= 0) return "+V2RayN";
         if (scheme === "http" && url.indexOf(".sendspace.com") >= 0) return "+V2RayN";
+        if (/(?:^|\.)sensortower\.com$/.test(host)) return "+V2RayN";
         if (/^http:\/\/tweets\.seraph\.me\//.test(url)) return "+V2RayN";
         if (scheme === "http" && url.indexOf("sesawe.net") >= 0) return "+V2RayN";
         if (/(?:^|\.)sesawe\.net$/.test(host)) return "+V2RayN";
