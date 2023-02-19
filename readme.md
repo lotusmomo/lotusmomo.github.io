@@ -6,7 +6,9 @@
 >
 > ### You can easily get access to the IEEExplorer, Google Scholar and so on!
 
-## [Click me](./pac.html) for the latest PAC file (for PC v2rayN, IP 127.0.0.1, SS5 1080, HTTP 1081)
+[Click me](./pac.html) for the latest PAC file (for PC v2rayN, IP 127.0.0.1, SS5 1080, HTTP 1081)
+
+[Click me](./subscribe.html) for base64 encoded subscribe url
 
 ```
 vmess://ew0KICAidiI6ICIyIiwNCiAgInBzIjogIm1vc2xiLXYtYXdzLWNuaGsiLA0KICAiYWRkIjogIm1vc2xiLXgtYXdzLWNuaGsuc29mdGV0aGVyLm5ldCIsDQogICJwb3J0IjogIjg4ODAiLA0KICAiaWQiOiAiNzc5MDkyZmUtOGJkMy00MTJlLWFiM2QtMWM4MThlZGUwOGI1IiwNCiAgImFpZCI6ICIwIiwNCiAgInNjeSI6ICJhdXRvIiwNCiAgIm5ldCI6ICJ3cyIsDQogICJ0eXBlIjogIm5vbmUiLA0KICAiaG9zdCI6ICJtb3NsYi14LWF3cy1jbmhrLnNvZnRldGhlci5uZXQiLA0KICAicGF0aCI6ICIiLA0KICAidGxzIjogIiIsDQogICJzbmkiOiAiIiwNCiAgImFscG4iOiAiIg0KfQ==
