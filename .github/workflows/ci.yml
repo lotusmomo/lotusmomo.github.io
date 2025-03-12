@@ -71,7 +71,7 @@ jobs:
       - name: Drop old versions
         run: |
           cd gh-pages
-          git checkout --orphan new-gh-pages
+          git checkout --orphan tmp_branch
           git branch -D gh-pages
           git branch -m gh-pages
 
@@ -84,13 +84,13 @@ jobs:
         run: |
           cd gh-pages
           git rm -rf .
-          tar -xvf ${{ github.workspace }}/*.tar -C gh-pages/
+          tar -xvf ${{ github.workspace }}/*.tar -C .
 
       - name: Commit changes
         run: |
           cd gh-pages
           git add .
-          git commit -m "Deploy ${{ github.sha }}"
+          git commit --allow-empty --allow-empty-message -m "Deploy ${{ github.sha }}"
 
       - name: Push changes
         run: |
