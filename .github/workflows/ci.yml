@@ -34,6 +34,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          name: github-pages
           path: ./public
 
   deploy:
@@ -80,7 +81,7 @@ jobs:
       - name: Download Pages artifact
         uses: actions/download-artifact@v4
         with:
-          name: pages
+          name: github-pages
           path: gh-pages/
 
       - name: Commit changes
