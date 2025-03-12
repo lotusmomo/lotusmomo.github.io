@@ -71,7 +71,9 @@ jobs:
       - name: Drop old versions
         run: |
           cd gh-pages
-          rm -rf *
+          git checkout --orphan new-gh-pages
+          git branch -D gh-pages
+          git branch -m gh-pages
 
       - name: Download Pages artifact
         uses: actions/download-artifact@v4
@@ -80,6 +82,8 @@ jobs:
       
       - name: Extract Pages artifact
         run: |
+          cd gh-pages
+          git rm -rf .
           tar -xvf ${{ github.workspace }}/*.tar -C gh-pages/
 
       - name: Commit changes
