@@ -71,18 +71,16 @@ jobs:
       - name: Drop old versions
         run: |
           cd gh-pages
-          readarray -t old_version < <(git log --format='%h' -- "${GITHUB_REF_NAME}" | tail -n +10)
-          GIT_SEQUENCE_EDITOR="sed -i '1 i break'" git rebase --interactive --committer-date-is-author-date --root
-          for commit in "${old_version[@]}"; do
-            sed -i "/${commit}/d" .git/rebase-merge/git-rebase-todo
-          done
-          git rebase --continue
+          rm -rf *
 
       - name: Download Pages artifact
         uses: actions/download-artifact@v4
         with:
           name: github-pages
-          path: gh-pages/
+      
+      - name: Extract Pages artifact
+        run: |
+          tar -xvf ${{ github.workspace }}/*.tar -C gh-pages/
 
       - name: Commit changes
         run: |
