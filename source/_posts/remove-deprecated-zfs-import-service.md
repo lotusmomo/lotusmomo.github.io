@@ -1,7 +1,8 @@
 ---
 title: 移除过时的 zfs-import 服务
 date: 2025-03-15 14:05:31
-tags:
+tags: []
+categories: Linux
 ---
 
 有的时候我们已经删除了某个 zfs 存储池，但是 zfs-import 服务仍然尝试在系统启动时导入它。本文记录了如何移除这种过时的 zfs-import 服务。

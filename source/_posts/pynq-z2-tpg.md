@@ -1,7 +1,8 @@
 ---
 title: 基于 PYNQ-Z2 的 HDMI 开发系列 01 - 输出测试图
 date: 2025-03-11 23:11:25
-tags:
+tags: []
+categories: FPGA 入门
 ---
 
 本系列为 ZYNQ7000 视频处理的第一篇博客。该系列准备介绍一下 FPGA 上的视频处理流程。
