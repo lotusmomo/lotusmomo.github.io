@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+  <link rel="mask-icon" href="/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.lotusmomo.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.22.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12,"onmobile":false},"hljswrap":true,"copycode":{"enable":false,"style":null,"show_result":false},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="去年由于科研的需要，有大量的数据存储需求。再加之对百度网盘存储不放心，准备自建存储服务器，这样可以摆脱所有云存储的需求，将数据牢牢掌握在自己手中。我准备配一台存储服务器，这种设备叫做NAS (Net Attached Storage)，即网络附加存储。可以通过NFS，SMB&#x2F;CIFS，FTP，iSCSI等协议访问服务器内的文件。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记一次存储服务器的搭建">
+<meta property="og:url" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/index.html">
+<meta property="og:site_name" content="落寒陌墨の隠し部屋">
+<meta property="og:description" content="去年由于科研的需要，有大量的数据存储需求。再加之对百度网盘存储不放心，准备自建存储服务器，这样可以摆脱所有云存储的需求，将数据牢牢掌握在自己手中。我准备配一台存储服务器，这种设备叫做NAS (Net Attached Storage)，即网络附加存储。可以通过NFS，SMB&#x2F;CIFS，FTP，iSCSI等协议访问服务器内的文件。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/goofish-screenshot.png">
+<meta property="og:image" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/h3c-warranty-check.png">
+<meta property="og:image" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/server-internal.png">
+<meta property="og:image" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/10g-nic.png">
+<meta property="og:image" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/live-cd.png">
+<meta property="og:image" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/openzfs.svg">
+<meta property="og:image" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/mount-smb-win.png">
+<meta property="article:published_time" content="2023-04-24T00:59:55.000Z">
+<meta property="article:modified_time" content="2023-04-24T00:59:55.000Z">
+<meta property="article:author" content="落寒陌墨">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/goofish-screenshot.png">
+
+
+<link rel="canonical" href="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/","path":"2023/04/24/nas-setting-up/","title":"记一次存储服务器的搭建"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>记一次存储服务器的搭建 | 落寒陌墨の隠し部屋</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="落寒陌墨の隠し部屋" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">落寒陌墨の隠し部屋</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tools"><a href="/tools/" rel="section"><i class="fas fa-screwdriver-wrench fa-fw"></i>工具</a></li><li class="menu-item menu-item-across"><a href="/across/" rel="section"><i class="fas fa-mask fa-fw"></i>ACROSS</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">准备硬件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E7%9B%98"><span class="nav-number">1.1.</span> <span class="nav-text">硬盘</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.2.</span> <span class="nav-text">服务器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E5%8D%A1"><span class="nav-number">1.3.</span> <span class="nav-text">网卡</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98"><span class="nav-number">1.4.</span> <span class="nav-text">固态硬盘</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">安装操作系统</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">基础工作</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">文件系统的选择</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#EXT4"><span class="nav-number">4.1.</span> <span class="nav-text">EXT4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Btrfs"><span class="nav-number">4.2.</span> <span class="nav-text">Btrfs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ZFS"><span class="nav-number">4.3.</span> <span class="nav-text">ZFS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">4.4.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">4.5.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%AD%98%E5%82%A8%E6%B1%A0"><span class="nav-number">4.5.1.</span> <span class="nav-text">创建存储池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.5.2.</span> <span class="nav-text">创建文件系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81"><span class="nav-number">4.5.3.</span> <span class="nav-text">验证</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">共享配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#NFS"><span class="nav-number">5.1.</span> <span class="nav-text">NFS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-2"><span class="nav-number">5.2.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">5.3.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%BD%BD"><span class="nav-number">5.4.</span> <span class="nav-text">挂载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SMB-CIFS"><span class="nav-number">5.5.</span> <span class="nav-text">SMB&#x2F;CIFS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-3"><span class="nav-number">5.6.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-2"><span class="nav-number">5.7.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FTP"><span class="nav-number">5.8.</span> <span class="nav-text">FTP</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="落寒陌墨"
+      src="/icon_shiro_500x500.jpg">
+  <p class="site-author-name" itemprop="name">落寒陌墨</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lotusmomo" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lotusmomo" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/344164860" title="BiliBili → https:&#x2F;&#x2F;space.bilibili.com&#x2F;344164860" rel="noopener me" target="_blank"><i class="fab fa-bilibili fa-fw"></i>BiliBili</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://x.com/hideo_suzumiya" title="Twitter → https:&#x2F;&#x2F;x.com&#x2F;hideo_suzumiya" rel="noopener me" target="_blank"><i class="fab fa-x-twitter fa-fw"></i>Twitter</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yhyxwgy+fromblog@googlemail.com" title="E-Mail → mailto:yhyxwgy+fromblog@googlemail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://scholar.google.com/citations?user=x1O9ItoAAAAJ" title="Scholar → https:&#x2F;&#x2F;scholar.google.com&#x2F;citations?user&#x3D;x1O9ItoAAAAJ" rel="noopener me" target="_blank"><i class="fab fa-google-scholar fa-fw"></i>Scholar</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://orcid.org/0009-0003-6428-7696" title="ORCID → https:&#x2F;&#x2F;orcid.org&#x2F;0009-0003-6428-7696" rel="noopener me" target="_blank"><i class="fab fa-orcid fa-fw"></i>ORCID</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://lotusmomo.cn/" title="https:&#x2F;&#x2F;lotusmomo.cn" rel="noopener" target="_blank">落寒陌墨の隠し部屋</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://lbqaq.top/" title="https:&#x2F;&#x2F;lbqaq.top" rel="noopener" target="_blank">luoboQAQ的博客</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.lotusmomo.cn/2023/04/24/nas-setting-up/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/icon_shiro_500x500.jpg">
+      <meta itemprop="name" content="落寒陌墨">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="记一次存储服务器的搭建 | 落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          记一次存储服务器的搭建
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-04-24 08:59:55" itemprop="dateCreated datePublished" datetime="2023-04-24T08:59:55+08:00">2023-04-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>7.3k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>7 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>去年由于科研的需要，有大量的数据存储需求。再加之对百度网盘存储不放心，准备自建存储服务器，这样可以摆脱所有云存储的需求，将数据牢牢掌握在自己手中。我准备配一台存储服务器，这种设备叫做<code>NAS (Net Attached Storage)</code>，即<strong>网络附加存储</strong>。可以通过<code>NFS</code>，<code>SMB/CIFS</code>，<code>FTP</code>，<code>iSCSI</code>等协议访问服务器内的文件。</p>
+<span id="more"></span>
+<h1>准备硬件</h1>
+<h2 id="硬盘">硬盘</h2>
+<p>2021年 Chia 狂潮已过，二手硬盘的价格降到了史低。在咸鱼上与奸商斗智斗勇，以920元/片的价格购得8片西部数据 WDC HC550 16T 硬盘。</p>
+<p><img src="goofish-screenshot.png" alt="goofish-scrshot"></p>
+<p>看盘片的信息，这批硬盘应该是华三的服务器下架硬盘。根据硬盘上的SN码（小标签），在华三官网上查询，居然都还在保，到2024年，算是捡了个漏。</p>
+<p><img src="h3c-warranty-check.png" alt="h3c-warranty-check"></p>
+<h2 id="服务器">服务器</h2>
+<p>又在淘宝上购买了一台存储服务器，型号为华为RH2288V2。这台服务器具有12盘位，支持双路至强E5V2处理器，DDR3 REG ECC内存，LSI2308直通卡，具有很高的性价比。正好手头有很多DDR3 REG ECC的服务器内存，正好利用起来。服务器到手后内部很干净。</p>
+<p><img src="server-internal.png" alt="server-internal"></p>
+<h2 id="网卡">网卡</h2>
+<p>万兆网卡自然也是不可或缺的，正好在咸鱼上看到一块不错的惠普万兆光口网卡价格不错，型号为 NC523SFP 是 Qlogic 的 OEM 产品。</p>
+<p><img src="10g-nic.png" alt="10g-nic"></p>
+<h2 id="固态硬盘">固态硬盘</h2>
+<p>此外，还要准备一块系统盘，我购买了一块 NVMe 的固态盘，三星 PM981A 。此盘为三星970 Pro的 OEM 版本，性能尚可。再加上一块PCIe转NVMe的转接板，就可以使用了。</p>
+<p>由于x79的BIOS无法识别NVMe的硬盘，所以虽然系统里能看到，但是却是无法从这块硬盘启动的。对于这种情况，一般有两种解决思路：</p>
+<ul>
+<li>
+<p>从源头解决问题。在BIOS中添加NVMe的驱动<code>NVMeExpressDxE.ffs</code>。</p>
+<p>使用这种方法可以参考这篇文章：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/57240058">https://zhuanlan.zhihu.com/p/57240058</a></p>
+</li>
+<li>
+<p>曲线救国。在一个U盘中写入Clover，用Clover链式引导NVMe中的操作系统。</p>
+<p>使用这种方法可以参考这篇文章：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/508424810">https://zhuanlan.zhihu.com/p/508424810</a></p>
+</li>
+</ul>
+<h1>安装操作系统</h1>
+<p>其实NAS系统有很多选择，比如群晖DSM，UNRAID，TrueNAS Core/Scale等等。但是我不喜欢这类成品NAS系统。我这次选择安装Debian 11，从头开始配置。这样我就能掌控系统的所有细节，也能在踩各种坑的过程中学习到一些东西。</p>
+<ol>
+<li>
+<p>从 BFSU <s>广搜大学</s>(bushi 开源软件镜像站下载 Debian non-free 的 Live CD。选择non-free的原因是这种镜像中含有非自由固件，服务器上一些稀奇古怪的硬件可能并不提供开源自由的驱动，并没有被整合入Debian CD中。选择Live CD的原因在于可以在安装时临时进入系统环境，再次确保没有兼容性问题。</p>
+<p><img src="live-cd.png" alt="live-cd"></p>
+</li>
+<li>
+<p>使用Rufus或者其他镜像工具将下载的<code>iso</code>镜像写入U盘，或者直接使用Ventory。我更推荐后者。</p>
+</li>
+<li>
+<p>从U盘启动，在启动界面选择<code>Graphic install</code>，按照安装程序的指引安装系统。</p>
+<blockquote>
+<p>Tips: 不知道是不是 Debian 安装程序的 bug ，在开始最好不要连接互联网。因为一旦连接了互联网，无论后面的步骤选择什么镜像源，哪怕是国内的镜像源，实际上都会连接到<code>ftp.debian.org</code>这个境外的官方源，速度极慢，即使你选择了不使用网络镜像。如果不联网，只会使用iso内部的源，安装很快就能完成。</p>
+</blockquote>
+</li>
+</ol>
+<h1>基础工作</h1>
+<p>以下的工作默认为<code>root</code>用户环境下进行。务必谨慎操作，除非你知道你在做什么。</p>
+<ul>
+<li>
+<p>换源</p>
+<p>执行以下指令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> &lt;&lt; <span class="string">&#x27;EOF&#x27;</span> &gt; /etc/apt/sources.list</span><br><span class="line"><span class="comment"># 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释</span></span><br><span class="line">deb https://mirrors.bfsu.edu.cn/debian/ bullseye main contrib non-free</span><br><span class="line"><span class="comment"># deb-src https://mirrors.bfsu.edu.cn/debian/ bullseye main contrib non-free</span></span><br><span class="line"></span><br><span class="line">deb https://mirrors.bfsu.edu.cn/debian/ bullseye-updates main contrib non-free</span><br><span class="line"><span class="comment"># deb-src https://mirrors.bfsu.edu.cn/debian/ bullseye-updates main contrib non-free</span></span><br><span class="line"></span><br><span class="line">deb https://mirrors.bfsu.edu.cn/debian/ bullseye-backports main contrib non-free</span><br><span class="line"><span class="comment"># deb-src https://mirrors.bfsu.edu.cn/debian/ bullseye-backports main contrib non-free</span></span><br><span class="line"></span><br><span class="line">deb https://mirrors.bfsu.edu.cn/debian-security bullseye-security main contrib non-free</span><br><span class="line"><span class="comment"># deb-src https://mirrors.bfsu.edu.cn/debian-security bullseye-security main contrib non-free</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># deb https://security.debian.org/debian-security bullseye-security main contrib non-free</span></span><br><span class="line"><span class="comment"># # deb-src https://security.debian.org/debian-security bullseye-security main contrib non-free</span></span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+<p>这将把中间的内容写入<code>/etc/apt/sources.list</code>文件中，直到终端读取到<code>EOF</code>字符串。</p>
+<p>再运行<code>apt update</code>来将软件源写入缓存。</p>
+</li>
+<li>
+<p>安装常用工具</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y -f openssh-server vim git zsh wget curl build-essential neofetch tmux htop apt-transport-https ca-certificates</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>一些配置</p>
+<ul>
+<li>
+<p><code>ssh</code>允许<code>root</code>用户登录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;PermitRootLogin yes&quot;</span> &gt;&gt; /etc/ssh/sshd_config</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>配置<code>oh-my-zsh</code>与<code>powerline-10k</code></p>
+<blockquote>
+<p>Tips: <code>zsh</code>配合<code>oh-my-zsh</code>与<code>powerline-10k</code>可以大大提高终端工作的效率。优秀的终端补全功能会让你用一次就离不开它。当然选择开箱即用的<code>fish</code>也未尝不可，只需<code>apt-get install -y fish</code>并且<code>chsh -s /usr/bin/fish</code>。</p>
+</blockquote>
+<p>在任意 shell 下执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://gitee.com/mirrors/oh-my-zsh.git</span><br><span class="line"><span class="built_in">cd</span> oh-my-zsh/tools</span><br><span class="line">REMOTE=https://gitee.com/mirrors/oh-my-zsh.git sh install.sh <span class="comment">#To change remote</span></span><br></pre></td></tr></table></figure>
+<p>进入<code>zsh</code>环境后，再执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">rm</span> -rf oh-my-zsh</span><br><span class="line">git -C <span class="variable">$ZSH</span> remote set-url origin https://gitee.com/mirrors/oh-my-zsh.git</span><br><span class="line">git -C <span class="variable">$ZSH</span> pull</span><br><span class="line">git <span class="built_in">clone</span> --depth=1 https://gitee.com/romkatv/powerlevel10k.git <span class="variable">$&#123;ZSH_CUSTOM:-<span class="variable">$HOME</span>/.oh-my-zsh/custom&#125;</span>/themes/powerlevel10k</span><br><span class="line">omz theme <span class="built_in">set</span> powerlevel10k/powerlevel10k</span><br></pre></td></tr></table></figure>
+<p>然后<code>p10k</code>会自动进入主题的配置，选择你喜欢的终端主题吧！</p>
+</li>
+<li>
+<p>安装<code>conda</code></p>
+<blockquote>
+<p>Tips: 对于任意<code>Linux</code>发行版，我都不推荐直接使用系统的<code>Python</code>。因为有很多软件包依赖于系统提供的<code>Python</code>，而<code>Python</code>有一套自己的包管理体系<code>pip</code>，很容易一不小心把系统搞炸。因此我选择使用另外一套<code>Python</code>环境，依据你的喜好可以选择<code>Anaconda</code>，<code>Miniconda</code>或者<code>conda-forge</code>均可。此处以<code>Anaconda</code>为例。</p>
+</blockquote>
+<p>执行以下命令安装<code>Anaconda3</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">curl -O https://mirrors.nju.edu.cn/anaconda/archive/Anaconda3-2022.10-Linux-x86_64.sh</span><br><span class="line"><span class="built_in">chmod</span> +x ./Anaconda3-2022.10-Linux-x86_64.sh</span><br><span class="line">.Anaconda3-2022.10-Linux-x86_64.sh</span><br><span class="line">conda init zsh</span><br><span class="line"><span class="built_in">source</span> .zshrc</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<h1>文件系统的选择</h1>
+<p>对于安装NAS而言，最重要的莫过于选择文件系统了。由于系统基于<code>Linux</code>，还是有不少文件系统可以选择的。</p>
+<h2 id="EXT4">EXT4</h2>
+<p><code>EXT4</code>全称为<code>Fourth extended filesystem</code>，第四代可扩展文件系统，可以说是<code>Linux</code>上最流行的文件系统了。但是这个系统用作存储数据，还是有些简陋，缺乏可靠性。在此不过多介绍。详细的资料可参考：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-hans/Ext4">Ext4 - 维基百科，自由的百科全书</a></li>
+<li><a target="_blank" rel="noopener" href="https://wiki.archlinuxcn.org/wiki/Ext4">Ext4 - ArchWiki</a></li>
+</ul>
+<h2 id="Btrfs">Btrfs</h2>
+<p><code>Btrfs</code>即<code>B-Tree Filesystem</code>，是一种支持<code>CoW</code>（写时拷贝）的文件系统。Btrfs也宣称专注在“容错、修复及易于管理”。这种文件系统在<code>Arch Linux</code>上较为流行。详细的资料可参考：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-hans/Btrfs">Btrfs - 维基百科，自由的百科全书</a></li>
+<li><a target="_blank" rel="noopener" href="https://wiki.archlinuxcn.org/wiki/Btrfs">Btrfs - ArchWiki</a></li>
+</ul>
+<h2 id="ZFS">ZFS</h2>
+<p>下面我将着重介绍<code>ZFS</code>。一方面原因，<code>ZFS</code>是我认为最好的文件系统。另外一方面，<code>ZFS</code>有关的资料在国内十分稀少。</p>
+<p><img src="openzfs.svg" alt="OpenZFS"></p>
+<p><code>ZFS</code>的全称为<code>Zettabyte Filesystem</code>，最早是 Sun 开发应用于 Solaris 的操作系统，<code>ZFS</code>随着<code>OpenSolaris</code>一起开源了。在2010年，Sun被Oracle收购，<code>ZFS</code>成为Oracle的注册商标。Oracle停止为 <code>OpenSolaris</code> 和 <code>ZFS</code> 项目提供更新的源代码，使得 Oracle 的 <code>ZFS</code> 转为闭源。因此，有人成立了<code>illumos</code>项目，去维护已经存在的开源的<code>Solaris</code>代码，并且在2013年成立<code>OpenZFS</code>以配合<code>ZFS</code>的开源发展。<code>OpenZFS</code>维护管理核心ZFS代码。但是<code>ZFS</code>的代码采用<code>CDDL</code> （通用开发与散布许可证），与<code>Linux</code>内核的<code>GPL-v2</code>许可证相冲突，无法与<code>Linux</code>同时分发。但是藉由<code>DKMS</code> （动态内核模块支持）,我们可以添加内核模块，使内核支持<code>ZFS</code>的读写。</p>
+<h2 id="安装">安装</h2>
+<p>执行以下命令以安装<code>ZFS</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y zfsutils-linux</span><br></pre></td></tr></table></figure>
+<h2 id="使用">使用</h2>
+<h3 id="创建存储池">创建存储池</h3>
+<blockquote>
+<p>Tips: 这里我使用raidz2，这是一种“软raid”。类似于RAID6，raidz2最多允许两块物理磁盘同时损坏而不会丢失数据。请不要心疼存储空间，因为你的数据的价值可能数倍于存储介质。</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zpool create mainPool raidz2 sda sdb sdc sdd sde sdf sdg sdh -f</span><br></pre></td></tr></table></figure>
+<p>创建的存储池将默认挂载于<code>/mainPool</code>。此时已经可以向其中写入文件，但是不建议这样做。</p>
+<h3 id="创建文件系统">创建文件系统</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">zfs create mainPool/data</span><br><span class="line">zfs create mainPool/pub</span><br></pre></td></tr></table></figure>
+<h3 id="验证">验证</h3>
+<p>运行<code>df -h</code>可以看出文件系统已经被挂载：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">文件系统          容量  已用  可用 已用% 挂载点</span><br><span class="line">udev               24G     0   24G    0% /dev</span><br><span class="line">tmpfs             4.8G  3.4M  4.8G    1% /run</span><br><span class="line">/dev/nvme0n1p2    233G   11G  210G    5% /</span><br><span class="line">tmpfs              24G     0   24G    0% /dev/shm</span><br><span class="line">tmpfs             5.0M     0  5.0M    0% /run/lock</span><br><span class="line">/dev/nvme0n1p1    511M  5.8M  506M    2% /boot/efi</span><br><span class="line">tmpfs             4.8G   72K  4.8G    1% /run/user/0</span><br><span class="line">mainPool           76T  384K   76T    1% /mainPool</span><br><span class="line">mainPool/mirrors   76T   16G   76T    1% /mainPool/mirrors</span><br><span class="line">mainPool/pub       77T  324G   76T    1% /mainPool/pub</span><br><span class="line">mainPool/data      80T  4.0T   76T    6% /mainPool/data</span><br><span class="line">mainPool/pve       76T   15G   76T    1% /mainPool/pve</span><br><span class="line">/dev/sdj1          15T  2.1T   13T   14% /chenweitong</span><br><span class="line">tinyPool          1.8T  128K  1.8T    1% /tinyPool</span><br><span class="line">tinyPool/fs       1.8T  128K  1.8T    1% /tinyPool/fs</span><br><span class="line">tinyPool/data     1.8T   12G  1.8T    1% /tinyPool/data</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Tips: 具体的使用方法可参考<a target="_blank" rel="noopener" href="https://docs.oracle.com/cd/E38902_01/html/E38893/index.html">Oracle的官方文档</a>，里面写的十分详细。有便于携带的PDF版本：<a target="_blank" rel="noopener" href="https://docs.oracle.com/cd/E38902_01/pdf/E38893.pdf%E3%80%82">https://docs.oracle.com/cd/E38902_01/pdf/E38893.pdf。</a></p>
+</blockquote>
+<h1>共享配置</h1>
+<h2 id="NFS">NFS</h2>
+<p><code>nfs</code>是<code>Linux/UNIX</code>之间共享文件的常用方式。</p>
+<h2 id="安装-2">安装</h2>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install nfs-kernel-server</span><br></pre></td></tr></table></figure>
+<h2 id="配置">配置</h2>
+<p>编辑<code>/etc/exports</code>并加入以下行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/mainPool/pub     10.10.2.0/24(rw,all_squash,<span class="built_in">sync</span>)</span><br><span class="line">/mainPool/data    10.10.2.0/24(rw,root_squash,<span class="built_in">sync</span>)</span><br></pre></td></tr></table></figure>
+<p>详细配置参数可以参考鸟哥的文章：<a target="_blank" rel="noopener" href="http://cn.linux.vbird.org/linux_server/0330nfs.php">http://cn.linux.vbird.org/linux_server/0330nfs.php</a></p>
+<p>每次更改配置后，都需要重载配置：<code>systemctl reload nfs-server.service</code>。</p>
+<h2 id="挂载">挂载</h2>
+<p>在另外一台机器上执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount 10.10.2.10:/mainPool/pub /mnt/pub</span><br></pre></td></tr></table></figure>
+<p>再运行<code>df -h</code>就可以看到共享了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">文件系统                      容量  已用  可用 已用% 挂载点</span><br><span class="line">udev                          7.8G     0  7.8G    0% /dev</span><br><span class="line">tmpfs                         1.6G  1.6M  1.6G    1% /run</span><br><span class="line">/dev/sda2                      88G   49G   35G   59% /</span><br><span class="line">tmpfs                         7.9G     0  7.9G    0% /dev/shm</span><br><span class="line">tmpfs                         5.0M  4.0K  5.0M    1% /run/lock</span><br><span class="line">tmpfs                         7.9G     0  7.9G    0% /sys/fs/cgroup</span><br><span class="line">/dev/sda1                     511M  5.3M  506M    2% /boot/efi</span><br><span class="line">tmpfs                         1.6G   44K  1.6G    1% /run/user/1000</span><br><span class="line">10.10.2.10:/mainPool/pub       77T  324G   76T    1% /mnt/pub</span><br></pre></td></tr></table></figure>
+<h2 id="SMB-CIFS">SMB/CIFS</h2>
+<p>如果想要让Windows也连接共享，smb无疑是最简便的方式。<code>Linux</code>上<code>smb</code>服务器的实现是<code>samba</code>。</p>
+<h2 id="安装-3">安装</h2>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install samba</span><br></pre></td></tr></table></figure>
+<h2 id="配置-2">配置</h2>
+<p><code>samba</code>的用户认证依赖于<code>UNIX</code>用户，所以首先要向系统添加用户：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">useradd smbuser</span><br></pre></td></tr></table></figure>
+<p>然后设置SMB的密码：</p>
+<blockquote>
+<p>Tips: 首次添加新用户要加上<code>-a</code>参数。</p>
+</blockquote>
+<p><code>smbpasswd smbuser -a</code></p>
+<p>输入两次你想设置的密码就好了。</p>
+<p>下一步，更改<code>samba</code>的配置文件，路径在<code>/etc/samba/smb.conf</code>:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[global]</span></span><br><span class="line">   aio read <span class="attr">size</span> = <span class="number">0</span></span><br><span class="line">   aio write <span class="attr">size</span> = <span class="number">0</span></span><br><span class="line">   min <span class="attr">protocol</span> = SMB2</span><br><span class="line">   <span class="attr">workgroup</span> = WORKGROUP</span><br><span class="line">   log <span class="attr">file</span> = /var/log/samba/log.%m</span><br><span class="line">   max log <span class="attr">size</span> = <span class="number">1000</span></span><br><span class="line">   <span class="attr">logging</span> = file</span><br><span class="line">   panic <span class="attr">action</span> = /usr/share/samba/panic-action %d</span><br><span class="line">   server <span class="attr">role</span> = standalone server</span><br><span class="line">   obey pam <span class="attr">restrictions</span> = <span class="literal">yes</span></span><br><span class="line">   unix password <span class="attr">sync</span> = <span class="literal">yes</span></span><br><span class="line">   passwd <span class="attr">program</span> = /usr/bin/passwd %u</span><br><span class="line">   passwd <span class="attr">chat</span> = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .</span><br><span class="line">   pam password <span class="attr">change</span> = <span class="literal">yes</span></span><br><span class="line">   map to <span class="attr">guest</span> = bad user</span><br><span class="line">   <span class="attr">security</span> = user</span><br><span class="line">   usershare allow <span class="attr">guests</span> = <span class="literal">yes</span></span><br><span class="line"><span class="section">[data]</span></span><br><span class="line">   <span class="attr">comment</span> = Private Files</span><br><span class="line">   <span class="attr">browseable</span> = <span class="literal">yes</span></span><br><span class="line">   <span class="attr">path</span> = /mainPool/data</span><br><span class="line">   create <span class="attr">mask</span> = <span class="number">0666</span></span><br><span class="line">   directory <span class="attr">mask</span> = <span class="number">0777</span></span><br><span class="line">   <span class="attr">public</span> = <span class="literal">no</span></span><br><span class="line">   <span class="attr">available</span> = <span class="literal">yes</span></span><br><span class="line">   <span class="attr">writable</span> = <span class="literal">yes</span></span><br><span class="line"><span class="section">[pub]</span></span><br><span class="line">   <span class="attr">comment</span> = Public Files</span><br><span class="line">   <span class="attr">browseable</span> = <span class="literal">yes</span></span><br><span class="line">   <span class="attr">path</span> = /mainPool/pub</span><br><span class="line">   create <span class="attr">mask</span> = <span class="number">0666</span></span><br><span class="line">   directory <span class="attr">mask</span> = <span class="number">0777</span></span><br><span class="line">   <span class="attr">public</span> = <span class="literal">yes</span></span><br><span class="line">   <span class="attr">available</span> = <span class="literal">yes</span></span><br><span class="line">   <span class="attr">writable</span> = <span class="literal">yes</span></span><br><span class="line">   guest <span class="attr">ok</span> = <span class="literal">yes</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Tips: 其中<code>   aio read size = 0</code>与<code>aio write size = 0</code>十分重要，用于关闭文件异步读写，这样可以大幅提升Windows读写共享文件夹的速度。</p>
+</blockquote>
+<p>这就是Windows下挂载共享的效果啦：</p>
+<p><img src="mount-smb-win.png" alt="mount-smb-win"></p>
+<h2 id="FTP">FTP</h2>
+<p>另一种跨平台的文件共享方式就是<code>ftp</code>了。<code>Linux</code>上一个比较流行的<code>ftp</code>服务器实现为<code>vsftpd</code>。网上的教程很多，在这里就不赘述啦。可以参考：<a target="_blank" rel="noopener" href="https://help.ubuntu.com/community/vsftpd">vsftpd - Community Help Wiki - Ubuntu Documentation</a>。</p>
+<h1>总结</h1>
+<p>上面的文章，介绍了我从购买硬件到配置共享的全过程，希望能对你有所帮助。其中内容难以面面俱到，可能也有所阙漏，希望各位读者发现后予以斧正。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/04/13/hass-deploy/" rel="prev" title="Home Assistant 搭建指南">
+                  <i class="fa fa-angle-left"></i> Home Assistant 搭建指南
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/03/14/zfs-monitor/" rel="next" title="如何优雅监控zfs运行状态">
+                  如何优雅监控zfs运行状态 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">苏ICP备2021046226号-1 </a>
+      <img src="/foot-ga.avif" alt=""><a href="https://beian.mps.gov.cn/#/query/webSearch?code=32100302011190" rel="noopener" target="_blank">苏公网安备32100302011190号 </a>
+  </div>
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">落寒陌墨</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">55k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">50 分钟</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

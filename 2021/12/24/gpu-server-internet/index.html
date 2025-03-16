@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+  <link rel="mask-icon" href="/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.lotusmomo.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.22.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12,"onmobile":false},"hljswrap":true,"copycode":{"enable":false,"style":null,"show_result":false},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="高性能计算实验室提供了一台配置了六块NVDIA Tesla T4计算卡的GPU服务器，然而根据学校的相关管理规定，这台服务器并不能访问互联网，具体的说，核心交换机会将所有192.168.102.12发出的TCP[SYN]数据包全部丢弃。这可怎么办？实验室的同学们急坏了，一边骂着“にま的”，一边在寻找着突破封锁的方法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GPU服务器联网指南">
+<meta property="og:url" content="https://blog.lotusmomo.cn/2021/12/24/gpu-server-internet/index.html">
+<meta property="og:site_name" content="落寒陌墨の隠し部屋">
+<meta property="og:description" content="高性能计算实验室提供了一台配置了六块NVDIA Tesla T4计算卡的GPU服务器，然而根据学校的相关管理规定，这台服务器并不能访问互联网，具体的说，核心交换机会将所有192.168.102.12发出的TCP[SYN]数据包全部丢弃。这可怎么办？实验室的同学们急坏了，一边骂着“にま的”，一边在寻找着突破封锁的方法。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-12-24T06:22:00.000Z">
+<meta property="article:modified_time" content="2023-11-21T02:37:29.000Z">
+<meta property="article:author" content="落寒陌墨">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.lotusmomo.cn/2021/12/24/gpu-server-internet/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.lotusmomo.cn/2021/12/24/gpu-server-internet/","path":"2021/12/24/gpu-server-internet/","title":"GPU服务器联网指南"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>GPU服务器联网指南 | 落寒陌墨の隠し部屋</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="落寒陌墨の隠し部屋" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">落寒陌墨の隠し部屋</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tools"><a href="/tools/" rel="section"><i class="fas fa-screwdriver-wrench fa-fw"></i>工具</a></li><li class="menu-item menu-item-across"><a href="/across/" rel="section"><i class="fas fa-mask fa-fw"></i>ACROSS</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E5%85%AC%E5%B8%83%E4%B8%80%E4%BA%9B%E5%8F%82%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">最后公布一些参数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E6%B7%BB%E5%8A%A0"><span class="nav-number">1.1.</span> <span class="nav-text">快速添加</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#frp%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">1.2.</span> <span class="nav-text">frp服务器配置文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VPN%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AE%A1%E7%90%86%E5%AF%86%E7%A0%81"><span class="nav-number">1.3.</span> <span class="nav-text">VPN服务器管理密码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VPN%E5%AF%86%E7%A0%81"><span class="nav-number">1.4.</span> <span class="nav-text">VPN密码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E8%8E%B7%E5%BE%97%E7%9A%84ip"><span class="nav-number">1.5.</span> <span class="nav-text">关于获得的ip</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%A0%A1%E5%A4%96%E8%AE%BF%E9%97%AE"><span class="nav-number">1.6.</span> <span class="nav-text">关于校外访问</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="落寒陌墨"
+      src="/icon_shiro_500x500.jpg">
+  <p class="site-author-name" itemprop="name">落寒陌墨</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lotusmomo" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lotusmomo" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/344164860" title="BiliBili → https:&#x2F;&#x2F;space.bilibili.com&#x2F;344164860" rel="noopener me" target="_blank"><i class="fab fa-bilibili fa-fw"></i>BiliBili</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://x.com/hideo_suzumiya" title="Twitter → https:&#x2F;&#x2F;x.com&#x2F;hideo_suzumiya" rel="noopener me" target="_blank"><i class="fab fa-x-twitter fa-fw"></i>Twitter</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yhyxwgy+fromblog@googlemail.com" title="E-Mail → mailto:yhyxwgy+fromblog@googlemail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://scholar.google.com/citations?user=x1O9ItoAAAAJ" title="Scholar → https:&#x2F;&#x2F;scholar.google.com&#x2F;citations?user&#x3D;x1O9ItoAAAAJ" rel="noopener me" target="_blank"><i class="fab fa-google-scholar fa-fw"></i>Scholar</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://orcid.org/0009-0003-6428-7696" title="ORCID → https:&#x2F;&#x2F;orcid.org&#x2F;0009-0003-6428-7696" rel="noopener me" target="_blank"><i class="fab fa-orcid fa-fw"></i>ORCID</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://lotusmomo.cn/" title="https:&#x2F;&#x2F;lotusmomo.cn" rel="noopener" target="_blank">落寒陌墨の隠し部屋</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://lbqaq.top/" title="https:&#x2F;&#x2F;lbqaq.top" rel="noopener" target="_blank">luoboQAQ的博客</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.lotusmomo.cn/2021/12/24/gpu-server-internet/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/icon_shiro_500x500.jpg">
+      <meta itemprop="name" content="落寒陌墨">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="GPU服务器联网指南 | 落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GPU服务器联网指南
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-12-24 14:22:00" itemprop="dateCreated datePublished" datetime="2021-12-24T14:22:00+08:00">2021-12-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-11-21 10:37:29" itemprop="dateModified" datetime="2023-11-21T10:37:29+08:00">2023-11-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%A8%8B%E5%BA%8F%E4%BA%BA%E7%94%9F/" itemprop="url" rel="index"><span itemprop="name">程序人生</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>1.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>1 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>高性能计算实验室提供了一台配置了六块<code>NVDIA Tesla T4</code>计算卡的GPU服务器，然而根据学校的相关管理规定，这台服务器并不能访问互联网，具体的说，核心交换机会将所有<code>192.168.102.12</code>发出的<code>TCP[SYN]</code>数据包全部丢弃。这可怎么办？实验室的同学们急坏了，一边骂着“にま的”，一边在寻找着突破封锁的方法。</p>
+<span id="more"></span>
+<p>然而，广大劳动人们的智慧是无穷无尽的。经过我的一番思考，我用反向代理+VPN实现了上网功能，满足了劳动人民的需求，获得了实验室同学们的好评。下面我来介绍这种方法。<br>
+首先从TCP数据包的封锁突破。既然服务器无法主动发出对外的连接，那么只要一台客户端主机主动发起并保持对服务器的连接，服务器就能访问到客户端。就此我想到了著名的反向代理工具<code>frp</code>可以实现类似的效果。<br>
+我先用日本筑波大学的开源软件<code>Softether VPN</code>搭建好了VPN服务器，将<code>5555</code>端口作为接受连接的端口。网上教程一抓一大把，再次不再赘述。然后在本地配置<code>frp</code>的客户端，服务器上配置<code>frp</code>的服务端，将<code>5555</code>端口进行穿透。这样，服务器的<code>5555</code>端口实际上已经可以被连接了。<br>
+最后用<code>ftp</code>将vpn客户端传输到虚拟机上，创建虚拟网卡，新建连接，输入<code>192.168.102.12</code>，端口<code>5555</code>，熟练的打开Chrome，Oh~可以上网了！</p>
+<h2 id="最后公布一些参数">最后公布一些参数</h2>
+<h3 id="快速添加">快速添加</h3>
+<p>本仓库中的<code>yzu-gpu.vpn</code>为配置文件，导入客户端可一键连接。校外连接请使用<code>AliyunPub.vpn</code>。</p>
+<h3 id="frp服务器配置文件"><code>frp</code>服务器配置文件</h3>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[common]</span></span><br><span class="line"><span class="attr">bind_port</span> = <span class="number">7000</span></span><br><span class="line"><span class="attr">token</span> = <span class="number">812</span>ba835-<span class="number">4</span>fac-<span class="number">4</span>b08-<span class="number">9441</span>-<span class="number">8</span>b7dcc1bdcb8</span><br><span class="line"><span class="attr">dashboard_addr</span> = <span class="number">0.0</span>.<span class="number">0.0</span></span><br><span class="line"><span class="attr">dashboard_port</span> = <span class="number">7500</span></span><br><span class="line"><span class="comment"># dashboard user and passwd for basic auth protect</span></span><br><span class="line"><span class="attr">dashboard_user</span> = admin</span><br><span class="line"><span class="attr">dashboard_pwd</span> = admin</span><br></pre></td></tr></table></figure>
+<h3 id="VPN服务器管理密码">VPN服务器管理密码</h3>
+<p>下载<code>Softether VPN</code>管理工具，连接到服务器<code>192.168.102.12</code>，端口<code>5555</code>，密码</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Yzulug@</span><span class="number">114514</span></span><br></pre></td></tr></table></figure>
+<h3 id="VPN密码">VPN密码</h3>
+<p>下载<code>Softether VPN</code>客户端（管理工具也会一同安装），连接到服务器<code>192.168.102.12</code>，端口<code>5555</code>，<br>
+账号：<code>gpu</code><br>
+密码：<code>yzuserver</code></p>
+<h3 id="关于获得的ip">关于获得的ip</h3>
+<p>连接VPN后自动获得的ip为我的寝室内网ip，由路由器的DHCP自动分配，为<code>10.10.1.0/24</code>。<br>
+路由器的ip地址为<code>10.10.1.254</code>，管理用户、密码为<code>admin:Asd123456@</code>，不推荐自行配置。</p>
+<h3 id="关于校外访问">关于校外访问</h3>
+<p>服务同时穿透到阿里云服务器<code>101.132.42.234</code>，方法同上，只需更改ip地址。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/03/04/centos-docker-deploy/" rel="prev" title="CentOS下部署Docker">
+                  <i class="fa fa-angle-left"></i> CentOS下部署Docker
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/07/22/xterm-pve-guests/" rel="next" title="为PVE虚拟机启用XTerm登录">
+                  为PVE虚拟机启用XTerm登录 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">苏ICP备2021046226号-1 </a>
+      <img src="/foot-ga.avif" alt=""><a href="https://beian.mps.gov.cn/#/query/webSearch?code=32100302011190" rel="noopener" target="_blank">苏公网安备32100302011190号 </a>
+  </div>
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">落寒陌墨</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">55k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">50 分钟</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

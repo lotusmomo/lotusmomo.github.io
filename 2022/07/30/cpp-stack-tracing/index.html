@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+  <link rel="mask-icon" href="/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.lotusmomo.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.22.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12,"onmobile":false},"hljswrap":true,"copycode":{"enable":false,"style":null,"show_result":false},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="每当我的程序崩溃的时候，我都会用核心转储 (core dump) 文件来找出来崩溃发生的具体位置。（关于怎么产生和使用核心转储可以看我的文章。）一直以来我调程序的时候都是很开心的……直到我遇到了这个新的 bug。当我把它的核心转储文件载入到 GDB 之后，我很失望地发现所有的堆栈追踪 (stack trace) 都是关于系统库的，没有一行是关于我的代码的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="我们是怎么发现C++异常从堆栈追踪中消失的原因的">
+<meta property="og:url" content="https://blog.lotusmomo.cn/2022/07/30/cpp-stack-tracing/index.html">
+<meta property="og:site_name" content="落寒陌墨の隠し部屋">
+<meta property="og:description" content="每当我的程序崩溃的时候，我都会用核心转储 (core dump) 文件来找出来崩溃发生的具体位置。（关于怎么产生和使用核心转储可以看我的文章。）一直以来我调程序的时候都是很开心的……直到我遇到了这个新的 bug。当我把它的核心转储文件载入到 GDB 之后，我很失望地发现所有的堆栈追踪 (stack trace) 都是关于系统库的，没有一行是关于我的代码的。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-07-30T08:51:00.000Z">
+<meta property="article:modified_time" content="2022-08-01T15:26:04.000Z">
+<meta property="article:author" content="落寒陌墨">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.lotusmomo.cn/2022/07/30/cpp-stack-tracing/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.lotusmomo.cn/2022/07/30/cpp-stack-tracing/","path":"2022/07/30/cpp-stack-tracing/","title":"我们是怎么发现C++异常从堆栈追踪中消失的原因的"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>我们是怎么发现C++异常从堆栈追踪中消失的原因的 | 落寒陌墨の隠し部屋</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="落寒陌墨の隠し部屋" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">落寒陌墨の隠し部屋</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tools"><a href="/tools/" rel="section"><i class="fas fa-screwdriver-wrench fa-fw"></i>工具</a></li><li class="menu-item menu-item-across"><a href="/across/" rel="section"><i class="fas fa-mask fa-fw"></i>ACROSS</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">背景介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E5%BA%93%E9%87%8C%E9%9D%A2%E6%9C%89-Bug%EF%BC%9F"><span class="nav-number">1.1.</span> <span class="nav-text">系统库里面有 Bug？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%81%A2%E5%A4%8D-%E7%AC%A6%E5%8F%B7"><span class="nav-number">1.2.</span> <span class="nav-text">恢复 ?? 符号</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Glibc</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#libstdc"><span class="nav-number">2.1.</span> <span class="nav-text">libstdc++</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">Bug 报告</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%87%E7%BA%A7%E5%88%B0-GCC-8"><span class="nav-number">3.1.</span> <span class="nav-text">升级到 GCC 8</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">经验教训</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="落寒陌墨"
+      src="/icon_shiro_500x500.jpg">
+  <p class="site-author-name" itemprop="name">落寒陌墨</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lotusmomo" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lotusmomo" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/344164860" title="BiliBili → https:&#x2F;&#x2F;space.bilibili.com&#x2F;344164860" rel="noopener me" target="_blank"><i class="fab fa-bilibili fa-fw"></i>BiliBili</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://x.com/hideo_suzumiya" title="Twitter → https:&#x2F;&#x2F;x.com&#x2F;hideo_suzumiya" rel="noopener me" target="_blank"><i class="fab fa-x-twitter fa-fw"></i>Twitter</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yhyxwgy+fromblog@googlemail.com" title="E-Mail → mailto:yhyxwgy+fromblog@googlemail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://scholar.google.com/citations?user=x1O9ItoAAAAJ" title="Scholar → https:&#x2F;&#x2F;scholar.google.com&#x2F;citations?user&#x3D;x1O9ItoAAAAJ" rel="noopener me" target="_blank"><i class="fab fa-google-scholar fa-fw"></i>Scholar</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://orcid.org/0009-0003-6428-7696" title="ORCID → https:&#x2F;&#x2F;orcid.org&#x2F;0009-0003-6428-7696" rel="noopener me" target="_blank"><i class="fab fa-orcid fa-fw"></i>ORCID</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://lotusmomo.cn/" title="https:&#x2F;&#x2F;lotusmomo.cn" rel="noopener" target="_blank">落寒陌墨の隠し部屋</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://lbqaq.top/" title="https:&#x2F;&#x2F;lbqaq.top" rel="noopener" target="_blank">luoboQAQ的博客</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.lotusmomo.cn/2022/07/30/cpp-stack-tracing/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/icon_shiro_500x500.jpg">
+      <meta itemprop="name" content="落寒陌墨">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="我们是怎么发现C++异常从堆栈追踪中消失的原因的 | 落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          我们是怎么发现C++异常从堆栈追踪中消失的原因的
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-07-30 16:51:00" itemprop="dateCreated datePublished" datetime="2022-07-30T16:51:00+08:00">2022-07-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-08-01 23:26:04" itemprop="dateModified" datetime="2022-08-01T23:26:04+08:00">2022-08-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%A8%8B%E5%BA%8F%E4%BA%BA%E7%94%9F/" itemprop="url" rel="index"><span itemprop="name">程序人生</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>11k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>10 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>每当我的程序崩溃的时候，我都会用核心转储 (core dump) 文件来找出来崩溃发生的具体位置。（关于怎么产生和使用核心转储可以看<a href="#">我的文章</a>。）一直以来我调程序的时候都是很开心的……直到我遇到了这个新的 bug。当我把它的核心转储文件载入到 GDB 之后，我很失望地发现所有的堆栈追踪 (stack trace) 都是关于系统库的，没有一行是关于我的代码的。</p>
+<span id="more"></span>
+<blockquote>
+<p>TLDR: <a target="_blank" rel="noopener" href="https://gcc.gnu.org/viewcvs/gcc/trunk/libstdc%2B%2B-v3/src/c%2B%2B11/thread.cc?r1=249130&amp;r2=249129&amp;pathrev=249130">这个补丁</a>就好了。</p>
+</blockquote>
+<p>让我们踏上探索未知的旅程吧。</p>
+<h1>背景介绍</h1>
+<p>为了帮助我亲爱的读者朋友们理解我日常的调程序过程，让我们来看看这个简短的 C++ 代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// compile with:</span></span><br><span class="line"><span class="comment">//   g++ -g -std=c++11 sigsegv.cc -o sigsegv -pthread</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::vector&lt;<span class="type">int</span>&gt; v;</span><br><span class="line">    std::cout &lt;&lt; v[<span class="number">100</span>] &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(foo)</span></span>;</span><br><span class="line">    t.<span class="built_in">join</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>不出意外，这里应该要有一个段错误 (segmentation fault)。想要知道哪里触发了段错误，如果这个问题不是很容易触发的话，你可以把核心转储文件载入到 GDB 里面，或者如果这个问题很容易重现的话，你也可以直接在 GDB 里面重新跑一遍。那这里就让我们直接在 GDB 里面跑一遍：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gdb ./sigsegv</span></span><br><span class="line">GNU gdb (Ubuntu 7.11.1-0ubuntu1~16.5) 7.11.1</span><br><span class="line">Reading symbols from ./sigsegv...done.</span><br><span class="line">(gdb) r</span><br><span class="line">Starting program: /tmp/sigsegv</span><br><span class="line">[Thread debugging using libthread_db enabled]</span><br><span class="line">Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.</span><br><span class="line">[New Thread 0x7ffff6f4e700 (LWP 68189)]</span><br><span class="line"></span><br><span class="line">Thread 2 &quot;sigsegv&quot; received signal SIGSEGV, Segmentation fault.</span><br><span class="line">[Switching to Thread 0x7ffff6f4e700 (LWP 68189)]</span><br><span class="line">0x0000000000400f5d in foo () at sigsegv.cc:8</span><br><span class="line">8        std::cout &lt;&lt; v[100] &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">(gdb) bt</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">0  0x0000000000400f5d <span class="keyword">in</span> foo () at sigsegv.cc:8</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">1  0x00000000004027dd <span class="keyword">in</span> std::_Bind_simple&lt;void (*())()&gt;::_M_invoke&lt;&gt;(std::_Index_tuple&lt;&gt;) (this=0x617c48)</span></span><br><span class="line">    at /usr/include/c++/5/functional:1531</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">2  0x0000000000402736 <span class="keyword">in</span> std::_Bind_simple&lt;void (*())()&gt;::operator()() (this=0x617c48)</span></span><br><span class="line">    at /usr/include/c++/5/functional:1520</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">3  0x00000000004026c6 <span class="keyword">in</span> std::thread::_Impl&lt;std::_Bind_simple&lt;void (*())()&gt; &gt;::_M_run() (this=0x617c30)</span></span><br><span class="line">    at /usr/include/c++/5/thread:115</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">4  0x00007ffff7b0dc80 <span class="keyword">in</span> ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">5  0x00007ffff76296ba <span class="keyword">in</span> start_thread (arg=0x7ffff6f4e700) at pthread_create.c:333</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">6  0x00007ffff735f41d <span class="keyword">in</span> <span class="built_in">clone</span> () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:109</span></span><br></pre></td></tr></table></figure>
+<p>可以看到，GDB 一如既往能够显示出来是在我们代码中的哪一行崩溃的。<br>
+到目前为止一切正常。但是在这一次的 bug 里面，我的代码用了 <a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/container/vector/at">vector::at</a> 来访问数组元素。如果访问越界，它会抛出 <code>std::out_of_range</code> 异常。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// compile with:</span></span><br><span class="line"><span class="comment">//   g++ -g -std=c++11 exception.cc -o exception -pthread</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::vector&lt;<span class="type">int</span>&gt; v;</span><br><span class="line">    std::cout &lt;&lt; v.<span class="built_in">at</span>(<span class="number">100</span>) &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(foo)</span></span>;</span><br><span class="line">    t.<span class="built_in">join</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>看起来使用 at 是一个比 operator[] 更安全的写法。然而，这一次 GDB 却不会告诉我程序在哪里崩溃了：</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gdb ./exception</span></span><br><span class="line">GNU gdb (Ubuntu 7.11.1-0ubuntu1~16.5) 7.11.1</span><br><span class="line">Reading symbols from ./exception...done.</span><br><span class="line">(gdb) r</span><br><span class="line">Starting program: /tmp/exception</span><br><span class="line">[Thread debugging using libthread_db enabled]</span><br><span class="line">Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.</span><br><span class="line">[New Thread 0x7ffff6f4e700 (LWP 68143)]</span><br><span class="line">terminate called after throwing an instance of &#x27;std::out_of_range&#x27;</span><br><span class="line">  what():  vector::_M_range_check: __n (which is 100) &gt;= this-&gt;size() (which is 0)</span><br><span class="line"></span><br><span class="line">Thread 2 &quot;exception&quot; received signal SIGABRT, Aborted.</span><br><span class="line">[Switching to Thread 0x7ffff6f4e700 (LWP 68143)]</span><br><span class="line">0x00007ffff728d428 in __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:54</span><br><span class="line">54    ../sysdeps/unix/sysv/linux/raise.c: No such file or directory.</span><br><span class="line"></span><br><span class="line">(gdb) bt</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">0  0x00007ffff728d428 <span class="keyword">in</span> __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:54</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">1  0x00007ffff728f02a <span class="keyword">in</span> __GI_abort () at abort.c:89</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">2  0x00007ffff7ae484d <span class="keyword">in</span> __gnu_cxx::__verbose_terminate_handler() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">3  0x00007ffff7ae26b6 <span class="keyword">in</span> ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">4  0x00007ffff7ae2701 <span class="keyword">in</span> std::terminate() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">5  0x00007ffff7b0dd38 <span class="keyword">in</span> ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">6  0x00007ffff76296ba <span class="keyword">in</span> start_thread (arg=0x7ffff6f4e700) at pthread_create.c:333</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">7  0x00007ffff735f41d <span class="keyword">in</span> <span class="built_in">clone</span> () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:109</span></span><br></pre></td></tr></table></figure>
+<p>乍一看一切正常，我的程序在临死之前告诉我 vector 抛出了 std::out_of_range 异常。我简直被我的程序感动了。但是我想知道具体是那哪里抛出了异常。<br>
+让我们看看这个堆栈追踪，里面竟然没有一行是我的代码。虽然说在这个例子里面，直接看一眼代码你就可以看出来问题出现在哪里了，但是在我真正的项目里面有1万行 C++ 代码，我真的需要 GDB 来告诉我具体是在哪一行出了问题。<br>
+现在你应该明白为什么我对这个事情这么执着了。</p>
+<h2 id="系统库里面有-Bug？">系统库里面有 Bug？</h2>
+<p>坐在我边上的哥们 Niel 告诉我这有可能是因为底层的库里面有 bug。<br>
+说实话，我一般来说不相信编译器、操作系统或者底层库会出现大到足以影响到我日常使用的 bug。我觉得这几乎是不可能发生的事情，因为这些都是广泛使用的基础设施。<br>
+但是 Niel 说他以前有遇到过底层库的 bug，而且他说他愿意帮我看一下这个问题，而且他人又超级好的，所以我们就一起开始看这个问题了。</p>
+<h2 id="恢复-符号">恢复 ?? 符号</h2>
+<p>盯着 GDB 里面的 ?? 符号看是不会有任何帮助的。所以我决定把这些符号的名字找出来。我自以为我对 Ubuntu 已经有了足够的了解，所以我很自然地就打出来了 <code>sudo apt install libstdc++-gdb</code>。然而这个包并不存在。我花了点时间才找到了这个包正确的名字叫做 libstdc++6-5-dbg，其中6对应了 libstdc++.so.6，5指的是 GCC 5.4，因为我用的是 Ubuntu 16.04。<br>
+在安装好了调试符号之后，GDB 就给了我们更多的线索：</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gdb ./exception</span></span><br><span class="line">GNU gdb (Ubuntu 7.11.1-0ubuntu1~16.5) 7.11.1</span><br><span class="line">Reading symbols from ./exception...done.</span><br><span class="line">(gdb) r</span><br><span class="line">Starting program: /tmp/exception</span><br><span class="line">[Thread debugging using libthread_db enabled]</span><br><span class="line">Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.</span><br><span class="line">[New Thread 0x7ffff6f4e700 (LWP 68314)]</span><br><span class="line">terminate called after throwing an instance of &#x27;std::out_of_range&#x27;</span><br><span class="line">  what():  vector::_M_range_check: __n (which is 100) &gt;= this-&gt;size() (which is 0)</span><br><span class="line"></span><br><span class="line">Thread 2 &quot;exception&quot; received signal SIGABRT, Aborted.</span><br><span class="line">[Switching to Thread 0x7ffff6f4e700 (LWP 68314)]</span><br><span class="line">0x00007ffff728d428 in __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:54</span><br><span class="line">54    ../sysdeps/unix/sysv/linux/raise.c: No such file or directory.</span><br><span class="line"></span><br><span class="line">(gdb) bt</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">0  0x00007ffff728d428 <span class="keyword">in</span> __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:54</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">1  0x00007ffff728f02a <span class="keyword">in</span> __GI_abort () at abort.c:89</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">2  0x00007ffff7ae484d <span class="keyword">in</span> __gnu_cxx::__verbose_terminate_handler ()</span></span><br><span class="line">    at ../../../../src/libstdc++-v3/libsupc++/vterminate.cc:95</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">3  0x00007ffff7ae26b6 <span class="keyword">in</span> __cxxabiv1::__terminate (handler=&lt;optimized out&gt;)</span></span><br><span class="line">    at ../../../../src/libstdc++-v3/libsupc++/eh_terminate.cc:47</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">4  0x00007ffff7ae2701 <span class="keyword">in</span> std::terminate () at ../../../../src/libstdc++-v3/libsupc++/eh_terminate.cc:57</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">5  0x00007ffff7b0dd38 <span class="keyword">in</span> std::execute_native_thread_routine (__p=&lt;optimized out&gt;)</span></span><br><span class="line">    at ../../../../../src/libstdc++-v3/src/c++11/thread.cc:92</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">6  0x00007ffff76296ba <span class="keyword">in</span> start_thread (arg=0x7ffff6f4e700) at pthread_create.c:333</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">7  0x00007ffff735f41d <span class="keyword">in</span> <span class="built_in">clone</span> () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:109</span></span><br></pre></td></tr></table></figure>
+<h1>Glibc</h1>
+<p>我们决定跟着堆栈追踪从底向上地一层一层看过去。clone() 听起来并不十分有趣，所以我们就跳过了它。所以我们现在要看的是 pthread_create.c:333。一番搜索之后，我意识到了它是在 glibc 里面的。但是我用的是哪个版本的 glibc 呢？我的想法是用 ldd 先把 .so 文件找出来：</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ldd ./exception</span></span><br><span class="line">    linux-vdso.so.1 =&gt;  (0x00007ffc77f54000)</span><br><span class="line">    libstdc++.so.6 =&gt; /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f23ae730000)</span><br><span class="line">    libgcc_s.so.1 =&gt; /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f23ae51a000)</span><br><span class="line">    libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007f23ae150000)</span><br><span class="line">    libm.so.6 =&gt; /lib/x86_64-linux-gnu/libm.so.6 (0x00007f23ade47000)</span><br><span class="line">    /lib64/ld-linux-x86-64.so.2 (0x00007f23aeab2000)</span><br></pre></td></tr></table></figure>
+<p>现在我们知道 .so 文件在哪里了，那具体是哪个版本呢？</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">ls</span> -la /lib/x86_64-linux-gnu/libc.so.6</span></span><br><span class="line">lrwxrwxrwx 1 root root 12 Mar  4 18:36 /lib/x86_64-linux-gnu/libc.so.6 -&gt; libc-2.23.so</span><br></pre></td></tr></table></figure>
+<p>好了，现在我们就可以在 glibc 2.23 的源代码里面看一眼 <a target="_blank" rel="noopener" href="https://sourceware.org/git/?p=glibc.git;a=blob;f=nptl/pthread_create.c;h=521604173325fdc222599f2902f4c1d796b8ef5d;hb=refs/heads/release/2.23/master#l333">pthread_create.c:333</a>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">THREAD_SETMEM (pd, result, CALL_THREAD_FCT (pd));  <span class="comment">// pthread_create.c:333</span></span><br></pre></td></tr></table></figure>
+<p>现在我想知道 <code>CALL_THREAD_FCT</code> 是做什么的，这看起来像是一个宏，我得找到这个宏的定义：</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">grep <span class="string">&#x27;#define CALL_THREAD_FCT&#x27;</span> -r glibc-2.23</span></span><br><span class="line">glibc-2.23/sysdeps/i386/nptl/tls.h:#define CALL_THREAD_FCT(descr) \</span><br></pre></td></tr></table></figure>
+<p>很幸运的是，这个符号真的是用 <code>#define CALL_THREAD_FCT</code> 定义出来的，但不幸的是我找到的结果跟我的机器并不是一个架构。但又非常幸运的是，我成功地猜到了我想要的在 <code>glibc-2.23/sysdeps/x86_64/nptl/tls.h</code>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># <span class="keyword">define</span> CALL_THREAD_FCT(descr) \</span></span><br><span class="line"><span class="meta">  (&#123; void *__res;                                                             \</span></span><br><span class="line"><span class="meta">     asm volatile (<span class="string">&quot;movq %%fs:%P2, %%rdi\n\t&quot;</span>                                 \</span></span><br><span class="line"><span class="meta">                   <span class="string">&quot;callq *%%fs:%P1&quot;</span>                                          \</span></span><br><span class="line"><span class="meta">                   : <span class="string">&quot;=a&quot;</span> (__res)                                             \</span></span><br><span class="line"><span class="meta">                   : <span class="string">&quot;i&quot;</span> (offsetof (struct pthread, start_routine)),          \</span></span><br><span class="line"><span class="meta">                     <span class="string">&quot;i&quot;</span> (offsetof (struct pthread, arg))                     \</span></span><br><span class="line"><span class="meta">                   : <span class="string">&quot;di&quot;</span>, <span class="string">&quot;si&quot;</span>, <span class="string">&quot;cx&quot;</span>, <span class="string">&quot;dx&quot;</span>, <span class="string">&quot;r8&quot;</span>, <span class="string">&quot;r9&quot;</span>, <span class="string">&quot;r10&quot;</span>, <span class="string">&quot;r11&quot;</span>,        \</span></span><br><span class="line"><span class="meta">                     <span class="string">&quot;memory&quot;</span>, <span class="string">&quot;cc&quot;</span>);                                         \</span></span><br><span class="line"><span class="meta">     __res; &#125;)</span></span><br></pre></td></tr></table></figure>
+<p>我不太懂汇编，这看起来像是在调用 start_routine 并把 args 作为参数传进去。看起来也不是很有趣。<br>
+我们决定看一下下一层调用堆栈。</p>
+<h2 id="libstdc">libstdc++</h2>
+<p>所以说我们需要找到 libstdc++ 的源代码。我意识到 libstdc++ 其实是 GCC 的一部分，所以说我们需要的是 GCC 5.4 的源代码。让我们看一看 <code>../../../../../src/libstdc++-v3/src/c++11/thread.cc:92</code>：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="type">static</span> <span class="type">void</span>*</span></span><br><span class="line"><span class="function">  <span class="title">execute_native_thread_routine</span><span class="params">(<span class="type">void</span>* __p)</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    thread::_Impl_base* <span class="type">__t</span> = <span class="built_in">static_cast</span>&lt;thread::_Impl_base*&gt;(__p);</span><br><span class="line">    thread::__shared_base_type __local;</span><br><span class="line">    __local.<span class="built_in">swap</span>(<span class="type">__t</span>-&gt;_M_this_ptr);</span><br><span class="line"></span><br><span class="line">    __try</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="type">__t</span>-&gt;_M_run();</span><br><span class="line">      &#125;</span><br><span class="line">    __catch(<span class="type">const</span> __cxxabiv1::__forced_unwind&amp;)</span><br><span class="line">      &#123;</span><br><span class="line">        __throw_exception_again;</span><br><span class="line">      &#125;</span><br><span class="line">    __catch(...)</span><br><span class="line">      &#123;</span><br><span class="line">        std::<span class="built_in">terminate</span>();  <span class="comment">// line 92</span></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125; <span class="comment">// extern &quot;C&quot;</span></span><br></pre></td></tr></table></figure>
+<p>当我打开这个文件的时候，我已经惊呆了。为什么 libstdc++ 想要捕获所有的异常？！就不能直接让用户程序崩溃吗！<br>
+这段代码说明了一切。我的代码肯定是跑在 <code>try</code> 代码块里面的。当它抛出一个异常之后，它会被92行的 <code>catch</code> 代码块捕获。但是到了程序的控制流已经被 <code>catch</code> 代码块捕获了的时候，所有的堆栈都已经被展开了 (stack unwind)，所有能帮助我调试程序的信息都被扔掉了。</p>
+<h1>Bug 报告</h1>
+<p>对我来说这看起来可以被称作 libstdc++ 的 bug。我搜索了一下，然后发现有人在2013年就报告了这个 Bug #55917，但是这个问题直到 GCC 8 才被修复。而且补丁本身非常简单，就是把 try-catch 删掉，直接让用户代码崩溃。</p>
+<h2 id="升级到-GCC-8">升级到 GCC 8</h2>
+<p>既然我们知道了这个问题已经在 GCC 8 里面修好了，我们就可以重新把程序用 GCC 8 编译一遍。因为 Ubuntu 16.04 的软件源里面没有包含 GCC 8，所以我们得用 ubuntu-toolchain-r/test PPA:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> add-apt-repository ppa:ubuntu-toolchain-r/test</span><br><span class="line"><span class="built_in">sudo</span> apt-get update</span><br><span class="line"><span class="built_in">sudo</span> apt-get install g++-8</span><br></pre></td></tr></table></figure>
+<p>现在让我们重新编译一下之前的代码然后放到 GDB 里面试试：</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">g++-8 -g -std=c++11 exception.cc -o exception -pthread</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gdb ./exception</span></span><br><span class="line">GNU gdb (Ubuntu 7.11.1-0ubuntu1~16.5) 7.11.1</span><br><span class="line">Reading symbols from ./exception...done.</span><br><span class="line">(gdb) r</span><br><span class="line">Starting program: /tmp/exception</span><br><span class="line">[Thread debugging using libthread_db enabled]</span><br><span class="line">Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.</span><br><span class="line">[New Thread 0x7ffff6f42700 (LWP 69463)]</span><br><span class="line">terminate called after throwing an instance of &#x27;std::out_of_range&#x27;</span><br><span class="line">  what():  vector::_M_range_check: __n (which is 100) &gt;= this-&gt;size() (which is 0)</span><br><span class="line"></span><br><span class="line">Thread 2 &quot;exception&quot; received signal SIGABRT, Aborted.</span><br><span class="line">[Switching to Thread 0x7ffff6f42700 (LWP 69463)]</span><br><span class="line">0x00007ffff7281428 in __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:54</span><br><span class="line">54    ../sysdeps/unix/sysv/linux/raise.c: No such file or directory.</span><br><span class="line"></span><br><span class="line">(gdb) bt</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">0  0x00007ffff7281428 <span class="keyword">in</span> __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:54</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">1  0x00007ffff728302a <span class="keyword">in</span> __GI_abort () at abort.c:89</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">2  0x00007ffff7ad78f7 <span class="keyword">in</span> ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">3  0x00007ffff7adda46 <span class="keyword">in</span> ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">4  0x00007ffff7adda81 <span class="keyword">in</span> std::terminate() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">5  0x00007ffff7addcb4 <span class="keyword">in</span> __cxa_throw () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">6  0x00007ffff7ad97f5 <span class="keyword">in</span> ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">7  0x0000000000401274 <span class="keyword">in</span> std::vector&lt;int, std::allocator&lt;int&gt; &gt;::_M_range_check (this=0x7ffff6f41e00, __n=100)</span></span><br><span class="line">    at /usr/include/c++/8/bits/stl_vector.h:960</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">8  0x0000000000401033 <span class="keyword">in</span> std::vector&lt;int, std::allocator&lt;int&gt; &gt;::at (this=0x7ffff6f41e00, __n=100)</span></span><br><span class="line">    at /usr/include/c++/8/bits/stl_vector.h:981</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">9  0x0000000000400dd7 <span class="keyword">in</span> foo () at exception.cc:8</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">10 0x00000000004013a7 <span class="keyword">in</span> std::__invoke_impl&lt;void, void (*)()&gt;(std::__invoke_other, void (*&amp;&amp;)()) (</span></span><br><span class="line">    __f=&lt;unknown type in /tmp/exception, CU 0x0, DIE 0x6a01&gt;) at /usr/include/c++/8/bits/invoke.h:60</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">11 0x0000000000401093 <span class="keyword">in</span> std::__invoke&lt;void (*)()&gt;(void (*&amp;&amp;)()) (__fn=&lt;unknown <span class="built_in">type</span> <span class="keyword">in</span> /tmp/exception, CU 0x0, DIE 0x6e68&gt;)</span></span><br><span class="line">    at /usr/include/c++/8/bits/invoke.h:95</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">12 0x00000000004019da <span class="keyword">in</span> std::thread::_Invoker&lt;std::tuple&lt;void (*)()&gt; &gt;::_M_invoke&lt;0ul&gt; (this=0x615c28)</span></span><br><span class="line">    at /usr/include/c++/8/thread:234</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">13 0x000000000040199b <span class="keyword">in</span> std::thread::_Invoker&lt;std::tuple&lt;void (*)()&gt; &gt;::operator() (this=0x615c28)</span></span><br><span class="line">    at /usr/include/c++/8/thread:243</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">14 0x0000000000401970 <span class="keyword">in</span> std::thread::_State_impl&lt;std::thread::_Invoker&lt;std::tuple&lt;void (*)()&gt; &gt; &gt;::_M_run (this=0x615c20)</span></span><br><span class="line">    at /usr/include/c++/8/thread:186</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">15 0x00007ffff7b0857f <span class="keyword">in</span> ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">16 0x00007ffff761d6ba <span class="keyword">in</span> start_thread (arg=0x7ffff6f42700) at pthread_create.c:333</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">17 0x00007ffff735341d <span class="keyword">in</span> <span class="built_in">clone</span> () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:109</span></span><br></pre></td></tr></table></figure>
+<p>注意看堆栈9，里面就是我们的代码！问题解决了！</p>
+<h1>经验教训</h1>
+<p>尽管底层的软件和库自身的问题影响到一般的程序的可能性很低，但它确实发生了，而且未来还有可能继续发生。所以说，不要害怕去深入底层看一看。<br>
+最后再次感谢 Niel 老哥。要不是有他帮我，我肯定不会深挖这个问题的。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/07/22/xterm-pve-guests/" rel="prev" title="为PVE虚拟机启用XTerm登录">
+                  <i class="fa fa-angle-left"></i> 为PVE虚拟机启用XTerm登录
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/08/01/anti-spidering-gzip-bomb/" rel="next" title="反爬虫的极致手段——利用Gzip压缩炸弹">
+                  反爬虫的极致手段——利用Gzip压缩炸弹 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">苏ICP备2021046226号-1 </a>
+      <img src="/foot-ga.avif" alt=""><a href="https://beian.mps.gov.cn/#/query/webSearch?code=32100302011190" rel="noopener" target="_blank">苏公网安备32100302011190号 </a>
+  </div>
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">落寒陌墨</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">55k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">50 分钟</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

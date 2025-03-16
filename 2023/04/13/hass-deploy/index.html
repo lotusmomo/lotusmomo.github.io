@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+  <link rel="mask-icon" href="/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.lotusmomo.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.22.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12,"onmobile":false},"hljswrap":true,"copycode":{"enable":false,"style":null,"show_result":false},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="简介 Home Assistant（以下简称HASS）是一款智能家居自动化平台，旨在帮助用户将各种智能设备整合在一起，从而实现更便捷、更高效、更智能的生活方式。通过HASS，用户可以轻松地控制家中的照明、温度、安防、音频、视频等各类设备，实现更智能、更个性化的家庭体验。HASS支持众多的智能设备品牌和协议，用户可以根据自己的需求进行定制和配置，实现智能家居的全面升级。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Home Assistant 搭建指南">
+<meta property="og:url" content="https://blog.lotusmomo.cn/2023/04/13/hass-deploy/index.html">
+<meta property="og:site_name" content="落寒陌墨の隠し部屋">
+<meta property="og:description" content="简介 Home Assistant（以下简称HASS）是一款智能家居自动化平台，旨在帮助用户将各种智能设备整合在一起，从而实现更便捷、更高效、更智能的生活方式。通过HASS，用户可以轻松地控制家中的照明、温度、安防、音频、视频等各类设备，实现更智能、更个性化的家庭体验。HASS支持众多的智能设备品牌和协议，用户可以根据自己的需求进行定制和配置，实现智能家居的全面升级。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-04-13T09:38:40.000Z">
+<meta property="article:modified_time" content="2023-04-13T09:38:40.000Z">
+<meta property="article:author" content="落寒陌墨">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.lotusmomo.cn/2023/04/13/hass-deploy/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.lotusmomo.cn/2023/04/13/hass-deploy/","path":"2023/04/13/hass-deploy/","title":"Home Assistant 搭建指南"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Home Assistant 搭建指南 | 落寒陌墨の隠し部屋</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="落寒陌墨の隠し部屋" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">落寒陌墨の隠し部屋</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tools"><a href="/tools/" rel="section"><i class="fas fa-screwdriver-wrench fa-fw"></i>工具</a></li><li class="menu-item menu-item-across"><a href="/across/" rel="section"><i class="fas fa-mask fa-fw"></i>ACROSS</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E7%8E%AF%E5%A2%83"><span class="nav-number">2.</span> <span class="nav-text">准备环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Docker-compose"><span class="nav-number">2.1.</span> <span class="nav-text">Docker-compose</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#K8s-deployment-yaml"><span class="nav-number">2.2.</span> <span class="nav-text">K8s deployment yaml</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%8F%92%E4%BB%B6"><span class="nav-number">3.</span> <span class="nav-text">安装插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Home-Assistant-Community-Store-HACS"><span class="nav-number">3.1.</span> <span class="nav-text">安装Home Assistant Community Store (HACS)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85hass-xiaomi-miot%E7%B1%B3%E5%AE%B6%E6%8F%92%E4%BB%B6"><span class="nav-number">3.2.</span> <span class="nav-text">安装hass-xiaomi-miot米家插件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">3.2.1.</span> <span class="nav-text">配置</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-Apple-HomeKit-%E6%8F%92%E4%BB%B6"><span class="nav-number">3.3.</span> <span class="nav-text">安装 Apple HomeKit 插件</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="落寒陌墨"
+      src="/icon_shiro_500x500.jpg">
+  <p class="site-author-name" itemprop="name">落寒陌墨</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lotusmomo" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lotusmomo" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/344164860" title="BiliBili → https:&#x2F;&#x2F;space.bilibili.com&#x2F;344164860" rel="noopener me" target="_blank"><i class="fab fa-bilibili fa-fw"></i>BiliBili</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://x.com/hideo_suzumiya" title="Twitter → https:&#x2F;&#x2F;x.com&#x2F;hideo_suzumiya" rel="noopener me" target="_blank"><i class="fab fa-x-twitter fa-fw"></i>Twitter</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yhyxwgy+fromblog@googlemail.com" title="E-Mail → mailto:yhyxwgy+fromblog@googlemail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://scholar.google.com/citations?user=x1O9ItoAAAAJ" title="Scholar → https:&#x2F;&#x2F;scholar.google.com&#x2F;citations?user&#x3D;x1O9ItoAAAAJ" rel="noopener me" target="_blank"><i class="fab fa-google-scholar fa-fw"></i>Scholar</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://orcid.org/0009-0003-6428-7696" title="ORCID → https:&#x2F;&#x2F;orcid.org&#x2F;0009-0003-6428-7696" rel="noopener me" target="_blank"><i class="fab fa-orcid fa-fw"></i>ORCID</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://lotusmomo.cn/" title="https:&#x2F;&#x2F;lotusmomo.cn" rel="noopener" target="_blank">落寒陌墨の隠し部屋</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://lbqaq.top/" title="https:&#x2F;&#x2F;lbqaq.top" rel="noopener" target="_blank">luoboQAQ的博客</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.lotusmomo.cn/2023/04/13/hass-deploy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/icon_shiro_500x500.jpg">
+      <meta itemprop="name" content="落寒陌墨">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Home Assistant 搭建指南 | 落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Home Assistant 搭建指南
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-04-13 17:38:40" itemprop="dateCreated datePublished" datetime="2023-04-13T17:38:40+08:00">2023-04-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%97%A5%E5%B8%B8/" itemprop="url" rel="index"><span itemprop="name">日常</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>2.5k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>2 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="简介">简介</h2>
+<p>Home Assistant（以下简称HASS）是一款智能家居自动化平台，旨在帮助用户将各种智能设备整合在一起，从而实现更便捷、更高效、更智能的生活方式。通过HASS，用户可以轻松地控制家中的照明、温度、安防、音频、视频等各类设备，实现更智能、更个性化的家庭体验。HASS支持众多的智能设备品牌和协议，用户可以根据自己的需求进行定制和配置，实现智能家居的全面升级。</p>
+<span id="more"></span>
+<h2 id="准备环境">准备环境</h2>
+<p>HASS是基于Docker开发的，已经为云原生的生产环境做好了准备。上至运行在服务器上的k8s集群，下至小巧的嵌入式设备，都能运行HASS。下面给出<code>Docker</code>与<code>k8s-pods</code>的安装方法。</p>
+<h3 id="Docker-compose">Docker-compose</h3>
+<ul>
+<li>执行<code>mkdir home-assistant &amp;&amp; cd home-assistant</code>创建文件夹，并且新建文件<code>docker-compose.yaml</code>，写入如下的配置文件：<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">homeassistant:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">homeassistant</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">homeassistant/home-assistant</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./:/config</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/etc/localtime:/etc/localtime:ro</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="attr">privileged:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">network_mode:</span> <span class="string">host</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Tips: 网络模式<code>host</code>仅能在<code>Linux</code>下使用。HomeKit扩展依赖<code>mDNS</code>功能，仅在<code>host</code>模式下可用。</p>
+</blockquote>
+</li>
+<li>运行<code>docker-compose up -d</code>启动。</li>
+</ul>
+<h3 id="K8s-deployment-yaml">K8s deployment yaml</h3>
+<ul>
+<li>将以下内容写入<code>hass.yaml</code>:<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">finalizers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">kubernetes.io/pvc-protection</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">homeassistant</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteMany</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">10Gi</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">外挂存储的名字</span></span><br><span class="line">  <span class="attr">volumeMode:</span> <span class="string">Filesystem</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">homeassistant</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">homeassistant</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">homeassistant</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">homeassistant</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">homeassistant/home-assistant</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">8123</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">200m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">512Mi</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">10m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">64Mi</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">/config</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">          <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">            <span class="attr">claimName:</span> <span class="string">homeassistant</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">homeassistant</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">homeassistant</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">externalTrafficPolicy:</span> <span class="string">Cluster</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">    <span class="attr">port:</span> <span class="number">8123</span></span><br><span class="line">    <span class="attr">targetPort:</span> <span class="number">8123</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">homeassistant</span></span><br><span class="line">  <span class="attr">sessionAffinity:</span> <span class="string">None</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><code>kubectl apply -f homeassistant.yaml</code><br>
+最后，访问<code>http://server_ip:8123</code>来进行初始化，设置用户名、密码等。</li>
+</ul>
+<h2 id="安装插件">安装插件</h2>
+<p>HASS的高扩展性主要来源于它丰富的插件与扩展。本章节将以米家与HomeKit为例，讲述插件的安装与配置过程。</p>
+<h3 id="安装Home-Assistant-Community-Store-HACS">安装Home Assistant Community Store (HACS)</h3>
+<ul>
+<li>进入容器内部，并cd进入到HASS配置目录：<br>
+<code>docker exec -it homeassistant bash</code></li>
+<li>使用命令行安装：<br>
+<code>wget -O - https://hacs.vip/get | bash -</code><br>
+如果上面的命令执行后卡住不动，或没有提示安装成功，请尝试下面的命令：<br>
+<code>wget -O - https://hacs.vip/get | HUB_DOMAIN=ghproxy.com/github.com bash -</code></li>
+</ul>
+<h3 id="安装hass-xiaomi-miot米家插件">安装hass-xiaomi-miot米家插件</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it homeassistant bash</span><br><span class="line">wget -q -O - https://cdn.jsdelivr.net/gh/al-one/hass-xiaomi-miot/install.sh | HUB_DOMAIN=hub.fastgit.org bash -</span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line">docker-compose restart</span><br></pre></td></tr></table></figure>
+<h4 id="配置">配置</h4>
+<ul>
+<li>配置 - 集成 - 管理集成 - 添加集成；</li>
+<li>搜索<code>xiaomi</code>，选择 <code>xiaomi-miot-auto</code>；</li>
+<li>选择“账号集成模式”；</li>
+<li>输入小米账号（手机号）密码，选择”云端模式“；<br>
+此时，所有米家物联网设备已经接入完毕。</li>
+</ul>
+<h3 id="安装-Apple-HomeKit-插件">安装 Apple HomeKit 插件</h3>
+<ul>
+<li>前往配置 - 集成 - 管理集成 - 添加集成 - Homekit；</li>
+<li>使用iOS设备上的家庭APP扫描网页“通知”面板上的二维码来添加HASS网关；</li>
+<li>跟着苹果提示，把设备都添加到“家庭”中。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/03/22/rock5b-realvnc/" rel="prev" title="在Rock5B开发板上安装RealVNC服务器">
+                  <i class="fa fa-angle-left"></i> 在Rock5B开发板上安装RealVNC服务器
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/04/24/nas-setting-up/" rel="next" title="记一次存储服务器的搭建">
+                  记一次存储服务器的搭建 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">苏ICP备2021046226号-1 </a>
+      <img src="/foot-ga.avif" alt=""><a href="https://beian.mps.gov.cn/#/query/webSearch?code=32100302011190" rel="noopener" target="_blank">苏公网安备32100302011190号 </a>
+  </div>
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">落寒陌墨</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">55k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">50 分钟</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

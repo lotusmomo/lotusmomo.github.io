@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+  <link rel="mask-icon" href="/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.lotusmomo.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.22.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12,"onmobile":false},"hljswrap":true,"copycode":{"enable":false,"style":null,"show_result":false},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="问题可以分成两部分解决：自适应与水印。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自适应遥感水印">
+<meta property="og:url" content="https://blog.lotusmomo.cn/2022/09/23/adaptive-remote-sensing-watermarking/index.html">
+<meta property="og:site_name" content="落寒陌墨の隠し部屋">
+<meta property="og:description" content="问题可以分成两部分解决：自适应与水印。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.lotusmomo.cn/legacy/imgs/15d22b9217501fee6ad3531e235abb82.png">
+<meta property="og:image" content="https://blog.lotusmomo.cn/legacy/imgs/6bc12d07df84d108676ed0d8dcc192c9.jpg">
+<meta property="og:image" content="https://blog.lotusmomo.cn/legacy/imgs/cd51eb3ad5daf1eb1e0f1d73839b204f.png">
+<meta property="og:image" content="https://blog.lotusmomo.cn/legacy/imgs/ce41fcdfc8bb49334e814c06e3d88eaf.png">
+<meta property="article:published_time" content="2022-09-23T10:02:00.000Z">
+<meta property="article:modified_time" content="2022-11-05T04:04:31.000Z">
+<meta property="article:author" content="落寒陌墨">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.lotusmomo.cn/legacy/imgs/15d22b9217501fee6ad3531e235abb82.png">
+
+
+<link rel="canonical" href="https://blog.lotusmomo.cn/2022/09/23/adaptive-remote-sensing-watermarking/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.lotusmomo.cn/2022/09/23/adaptive-remote-sensing-watermarking/","path":"2022/09/23/adaptive-remote-sensing-watermarking/","title":"自适应遥感水印"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>自适应遥感水印 | 落寒陌墨の隠し部屋</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="落寒陌墨の隠し部屋" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">落寒陌墨の隠し部屋</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tools"><a href="/tools/" rel="section"><i class="fas fa-screwdriver-wrench fa-fw"></i>工具</a></li><li class="menu-item menu-item-across"><a href="/across/" rel="section"><i class="fas fa-mask fa-fw"></i>ACROSS</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E9%80%82%E5%BA%94-Adaptive"><span class="nav-number">1.</span> <span class="nav-text">自适应 (Adaptive)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B1%E5%90%8C%E8%A6%81%E6%B1%82"><span class="nav-number">1.1.</span> <span class="nav-text">共同要求</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%92%88%E5%AF%B9%E9%81%A5%E6%84%9F%E5%9B%BE%E5%83%8F%E8%87%AA%E9%80%82%E5%BA%94%EF%BC%88%E4%B8%BB%E8%A6%81%E5%88%9B%E6%96%B0%E7%82%B9%EF%BC%89"><span class="nav-number">1.1.1.</span> <span class="nav-text">针对遥感图像自适应（主要创新点）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%8D%B0%E8%A6%81%E5%85%B7%E6%9C%89%E9%B2%81%E6%A3%92%E6%80%A7%EF%BC%88Robustness%EF%BC%89"><span class="nav-number">1.1.2.</span> <span class="nav-text">水印要具有鲁棒性（Robustness）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%8D%B0%E8%A6%81%E6%9C%89%E4%B8%8D%E5%8F%AF%E6%84%9F%E7%9F%A5%E6%80%A7"><span class="nav-number">1.1.3.</span> <span class="nav-text">水印要有不可感知性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%881"><span class="nav-number">1.2.</span> <span class="nav-text">方案1</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E5%86%85%E5%AE%B9"><span class="nav-number">1.2.1.</span> <span class="nav-text">主要内容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A0%94%E7%A9%B6%E9%98%BB%E7%A2%8D"><span class="nav-number">1.2.2.</span> <span class="nav-text">研究阻碍</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%882"><span class="nav-number">1.3.</span> <span class="nav-text">方案2</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E5%86%85%E5%AE%B9-2"><span class="nav-number">1.3.1.</span> <span class="nav-text">主要内容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%B0%E9%9A%BE-%E7%96%91%E6%83%91"><span class="nav-number">1.3.2.</span> <span class="nav-text">困难&amp;疑惑</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="nav-number">1.3.3.</span> <span class="nav-text">实验结果</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B0%B4%E5%8D%B0%EF%BC%88Watermark%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">水印（Watermark）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%A0%E7%BB%9F%E6%96%B9%E6%B3%95"><span class="nav-number">2.1.</span> <span class="nav-text">传统方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text">攻击方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%AE%E5%89%8D%E6%96%B9%E5%90%91"><span class="nav-number">2.3.</span> <span class="nav-text">目前方向</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%8D%B0%E5%90%8C%E6%AD%A5-Synchronization-Watermark"><span class="nav-number">2.3.1.</span> <span class="nav-text">水印同步(Synchronization Watermark)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%8D%B0%E6%8F%90%E5%8F%96-Watermark-Extraction"><span class="nav-number">2.3.2.</span> <span class="nav-text">水印提取(Watermark Extraction)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B0%B4%E5%8D%B0%E5%B5%8C%E5%85%A5"><span class="nav-number">2.3.3.</span> <span class="nav-text">水印嵌入</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%A5%E6%84%9F%E6%95%B0%E6%8D%AE%E7%9A%84%E5%9B%BE%E5%83%8F%E7%94%9F%E6%88%90"><span class="nav-number">3.</span> <span class="nav-text">遥感数据的图像生成</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C-2"><span class="nav-number">3.0.1.</span> <span class="nav-text">实验结果</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2022%E5%B9%B49%E6%9C%8822%E6%97%A5-22-28"><span class="nav-number">3.0.1.1.</span> <span class="nav-text">2022年9月22日 22:28</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2022%E5%B9%B49%E6%9C%8813%E6%97%A5"><span class="nav-number">3.0.1.2.</span> <span class="nav-text">2022年9月13日</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="落寒陌墨"
+      src="/icon_shiro_500x500.jpg">
+  <p class="site-author-name" itemprop="name">落寒陌墨</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lotusmomo" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lotusmomo" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/344164860" title="BiliBili → https:&#x2F;&#x2F;space.bilibili.com&#x2F;344164860" rel="noopener me" target="_blank"><i class="fab fa-bilibili fa-fw"></i>BiliBili</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://x.com/hideo_suzumiya" title="Twitter → https:&#x2F;&#x2F;x.com&#x2F;hideo_suzumiya" rel="noopener me" target="_blank"><i class="fab fa-x-twitter fa-fw"></i>Twitter</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yhyxwgy+fromblog@googlemail.com" title="E-Mail → mailto:yhyxwgy+fromblog@googlemail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://scholar.google.com/citations?user=x1O9ItoAAAAJ" title="Scholar → https:&#x2F;&#x2F;scholar.google.com&#x2F;citations?user&#x3D;x1O9ItoAAAAJ" rel="noopener me" target="_blank"><i class="fab fa-google-scholar fa-fw"></i>Scholar</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://orcid.org/0009-0003-6428-7696" title="ORCID → https:&#x2F;&#x2F;orcid.org&#x2F;0009-0003-6428-7696" rel="noopener me" target="_blank"><i class="fab fa-orcid fa-fw"></i>ORCID</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://lotusmomo.cn/" title="https:&#x2F;&#x2F;lotusmomo.cn" rel="noopener" target="_blank">落寒陌墨の隠し部屋</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://lbqaq.top/" title="https:&#x2F;&#x2F;lbqaq.top" rel="noopener" target="_blank">luoboQAQ的博客</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.lotusmomo.cn/2022/09/23/adaptive-remote-sensing-watermarking/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/icon_shiro_500x500.jpg">
+      <meta itemprop="name" content="落寒陌墨">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="自适应遥感水印 | 落寒陌墨の隠し部屋">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自适应遥感水印
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-09-23 18:02:00" itemprop="dateCreated datePublished" datetime="2022-09-23T18:02:00+08:00">2022-09-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-11-05 12:04:31" itemprop="dateModified" datetime="2022-11-05T12:04:31+08:00">2022-11-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%97%A5%E5%B8%B8/" itemprop="url" rel="index"><span itemprop="name">日常</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>4.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>问题可以分成两部分解决：<strong>自适应</strong>与<strong>水印</strong>。</p>
+<span id="more"></span>
+<h2 id="自适应-Adaptive">自适应 (Adaptive)</h2>
+<p>由于处理的目标数据为遥感图像。典型的遥感图像如下：<br>
+<img src="/legacy/imgs/15d22b9217501fee6ad3531e235abb82.png" alt="图片来自LEVIR-CD"></p>
+<h3 id="共同要求">共同要求</h3>
+<ul>
+<li>
+<h4 id="针对遥感图像自适应（主要创新点）">针对遥感图像自适应（主要创新点）</h4>
+<blockquote>
+<p>要结合遥感图像的特征，如果简单的将遥感图当作普通图像来处理，那就没意思。</p>
+<p>分为显式特征与隐式特征：</p>
+<ul>
+<li>显式：地物类型，地物特征；</li>
+<li>隐式：在神经网络中引入上下文注意（Context Attention）。</li>
+</ul>
+</blockquote>
+</li>
+<li>
+<h4 id="水印要具有鲁棒性（Robustness）">水印要具有鲁棒性（Robustness）</h4>
+<blockquote>
+<p>能抗多种攻击。</p>
+</blockquote>
+</li>
+<li>
+<h4 id="水印要有不可感知性">水印要有不可感知性</h4>
+<blockquote>
+<p>评价指标：峰值信噪比（PSNR）。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="方案1">方案1</h3>
+<h4 id="主要内容">主要内容</h4>
+<p>修改地物的pattern，将水印携带的信息隐藏在生成的pattern中，或者pattern就是水印本身，且要求与原有的背景看起来不突兀。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2008.01919">Jia, X., Wei, X., Cao, X., and Han, X., “Adv-watermark: A Novel Watermark Perturbation for Adversarial Examples”, <i>arXiv e-prints</i>, 2020.</a><br>
+对图像做一次<strong>语义分割（Semantic segmentation）<strong>或者</strong>实例分割（Instance segmentation）</strong>，用*某种算法（？）*挑选出最适合进行显式修改（explicit modification）的pattern，然后使用<code>Generative Networks</code>生成对应的pattern，但是这个pattern里面嵌了水印。这样做的好处就是肉眼几乎无法分辨，因为是<code>GAN</code>生成的pattern。一开始，我尝试了<code>DCGAN</code>，主要考虑到<code>DCGAN</code>所生成的模型是可线性叠加的，只要用不同类别的地物训练出不同的模型，再分别赋以不同的权重，即可生成具有不同风格的伪遥感图像；具体的权重应该可以通过对标的地块进行简单的地物分类得出，这类算法已相对成熟。这是我所设想出的一种自适应的方法。</p>
+</blockquote>
+<h4 id="研究阻碍">研究阻碍</h4>
+<p>对遥感数据的GAN极其难做，我首先尝试生成低分辨率的遥感图形。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1511.06434">Radford, A., Metz, L., and Chintala, S., “Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks”, <i>arXiv e-prints</i>, 2015.</a><br>
+<code>DCGAN</code>原论文使用的数据集是<code>ImageNet</code>，里面什么数据都有。我尝试将数据集替换为<code>AID</code>数据集中的操场进行训练，但是效果十分不理想。模型最后是收敛的，但是生成的都是噪声，说明模型实际上并没有学习到遥感图的任何特征。后来我换了一个分辨率较低的数据集，用了海岸线的数据集，生成的图像正常。这应该是由于特征太少导致的。<br>
+但是正如前面失败的实验，正常的遥感图不可能只要那么简单的特征。后来我上网搜索，几乎所有尝试复现的中文资料都表明遥感图的GAN实验结果是不理想的。我又尝试模仿<code>StyleGAN</code>（该模型是英伟达专为人脸的生成打造的，在人脸的生成方面数一数二），用全连接层替换了<code>DCGAN</code>中的卷积层，但是实验效果仍不理想（跟之前一样是噪声但是模型仍然收敛）。<br>
+<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1912.04958">Karras, T., Laine, S., Aittala, M., Hellsten, J., Lehtinen, J., and Aila, T., “Analyzing and Improving the Image Quality of StyleGAN”, <i>arXiv e-prints</i>, 2019.</a><br>
+后来我改变了思路，推测出一种可能，那就是一般的卷积无法处理遥感图像这种具有复杂特征的数据。我将目光转向了<code>Transformer</code>，也就是注意力机制，它不依赖任何卷积，我期望它能够在我之后的实验中起到一个比较好的效果。但是由于我对注意力机制不太熟悉，有花了一段时间研究了一下<code>ViTGAN</code>和<code>TransGAN</code>，这两个都是将 <code>Transformer</code> 加入 <code>GAN</code> 的网络。<br>
+<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2107.04589">Lee, K., Chang, H., Jiang, L., Zhang, H., Tu, Z., and Liu, C., “ViTGAN: Training GANs with Vision Transformers”, <i>arXiv e-prints</i>, 2021.</a><br>
+<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2102.07074">Jiang, Y., Chang, S., and Wang, Z., “TransGAN: Two Pure Transformers Can Make One Strong GAN, and That Can Scale Up”, <i>arXiv e-prints</i>, </a><br>
+<em>在这一步我们甚至可以大胆假设，能不能不光在<code>GAN</code>中引入注意力机制，甚至在整个对抗生成网络中都使用<code>Transformer</code>？</em></p>
+</blockquote>
+<h3 id="方案2">方案2</h3>
+<h4 id="主要内容-2">主要内容</h4>
+<p>将水印隐藏在噪声中，向图像叠加噪声，使人眼无法识别。<br>
+有文献提出，将水印识别单独置一个 <code>private network</code> ，与发布网络 <code>public network</code> 相隔离。这样我们在识别水印时只要调用 <code>private network</code> 即可。我认为相比起图像里包含的显式特征，想要学习噪声这种隐式特征是尤为困难的。这本质上类似于神经网络的特征过拟合。<br>
+为了使这种过拟合现象明显一些（这正是我们需要的），就不能使用普通的噪声。有一种噪声（包括但不限于噪声，可以是任何信号甚至pattern）专为实现这种目的而存在，即<strong>对抗样本攻击</strong>。我们只需要对遥感数据做一次对抗样本攻击，即可使图像分类的 <code>softmax</code> 产生较大的改变（即误分类）。我们这时就可以设置一个新的类，比如 <code>watermark</code> ，使所有经过对抗样本攻击的遥感图像被分类为 <code>watermark</code> 。<br>
+<img src="/legacy/imgs/6bc12d07df84d108676ed0d8dcc192c9.jpg" alt=""></p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1910.13222">Chen, L., Zhu, G., Li, Q., and Li, H., “Adversarial Example in Remote Sensing Image Recognition”, <i>arXiv e-prints</i>, 2019.</a>（遥感图像识别中的对抗性实例）<br>
+到这个地步，这个方向的目的已经十分明显了：这就是鲁棒性的对抗。<br>
+对于目标网络来说，要保证目标识别的鲁棒性（即<code>CNN</code>的鲁棒性）；作为隐藏信息，嵌入水印的一方，要保证自己水印的鲁棒性，要保证自己生成的对抗性样本能够抵御各种攻击。<br>
+<em>可能的防御手段：用魔法打败魔法。假如这里有若干张待识别的遥感图像，你不知道其中有没有对抗性样本，同时你对你的<code>CNN</code>网络不太自信，这时候只需要在前面加上一层<code>GAN</code>网络。因为高频的水印（噪声）信息不太可能被<code>GAN</code>所识别到，并且在生成的网络中复现。对于采用了注意力机制的<code>GAN</code>如上面提到的<code>TransGAN</code>与<code>ViTGAN</code>尤其如此。</em></p>
+</blockquote>
+<h4 id="困难-疑惑">困难&amp;疑惑</h4>
+<ul>
+<li>使用对抗样本攻击所生成的噪声为空间域噪声，鲁棒性不佳；</li>
+<li>此方法致力于使判别网络产生误判，从而将图像置于<em>Watermark</em>类，只能起到标记的作用。<br>
+假如仅仅是这样，为何不直接用加水印的照片与未加水印的照片训练一个<em>Network</em>专门由于分类加了水印的图片呢？
+<blockquote>
+<p>忘了哪一篇了</p>
+</blockquote>
+</li>
+<li>此方法只能应用于地物分类模型<br>
+这个算自适应吗？他跟普通图像的处理流程有什么不同呢？步骤必须有意义，比方说遥感图加了一个处理步骤，或者用了一种新的处理方法后，比使用通用图像的处理方法处理后效果要好，etc。</li>
+</ul>
+<h4 id="实验结果">实验结果</h4>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://colab.research.google.com/drive/15l7f5sECpimhRFCaxXhgjowr3-cWTTsF">基于FGSM的对抗样本实例</a></p>
+</blockquote>
+<h2 id="水印（Watermark）">水印（Watermark）</h2>
+<h3 id="传统方法">传统方法</h3>
+<ul>
+<li>基于空间域的水印（鲁棒性不强）</li>
+<li>基于频率域，如傅里叶，小波，DCT的水印算法</li>
+</ul>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://ieeexplore.ieee.org/document/9136707">W. Chen, C. Zhu, N. Ren, T. Seppänen and A. Keskinarkaus, “Screen-Cam Robust and Blind Watermarking for Tile Satellite Images,” in IEEE Access, vol. 8, pp. 125274-125294, 2020, doi: 10.1109/ACCESS.2020.3007689.</a></p>
+</blockquote>
+<h3 id="攻击方法">攻击方法</h3>
+<ul>
+<li>旋转</li>
+<li>裁剪，拼接</li>
+<li>重采样（缩放）</li>
+<li>滤波（中值，均值，高斯）</li>
+<li>噪声（椒盐，高斯）</li>
+<li>投影变换</li>
+<li>Screen-Cam Robust<br>
+<em>必须有一种有效的定位手段，确认水印在图像的哪一部分。</em></li>
+</ul>
+<blockquote>
+<p>难道就没有一种水印他的信息是与其完整性无关的吗？即只要拿到水印的任意部分都能完整的还原出信息。<br>
+遥感图一般是以瓦片Tile的形式存在，当前的图像过大或者过小都会自动切换到上一级或下一级显示。</p>
+</blockquote>
+<h3 id="目前方向">目前方向</h3>
+<h4 id="水印同步-Synchronization-Watermark">水印同步(Synchronization Watermark)</h4>
+<blockquote>
+<p>基于CNN定位精度，Robust</p>
+</blockquote>
+<h4 id="水印提取-Watermark-Extraction">水印提取(Watermark Extraction)</h4>
+<blockquote>
+<p>基于CNN/DNN的判读法</p>
+</blockquote>
+<h4 id="水印嵌入">水印嵌入</h4>
+<blockquote>
+<p>Pattern + Image 基于感知与Robust<br>
+<a target="_blank" rel="noopener" href="https://dl.acm.org/doi/abs/10.1145/3503161.3548139">You, Zhengxin, et al. “Image Generation Network for Covert Transmission in Online Social Network.” <em>Proceedings of the 30th ACM International Conference on Multimedia</em>. 2022.</a> 将CelebA换成GID训练遥感地块的Pattern来生成水印。</p>
+</blockquote>
+<h2 id="遥感数据的图像生成">遥感数据的图像生成</h2>
+<p>最近把<strong>遥感数据GAN的实验结果</strong>整理出来，现在做成什么样就什么样。要明确现在<strong>实验数据</strong>、GAN是否<strong>调参</strong>过，生成数据的结果，目前的最新的相关论文大概是什么样。<br>
+目前的图像生成方法主要有：</p>
+<ul>
+<li>GANs: DCGAN, StyleGAN, WGAN</li>
+<li>VAEs: VQ-VAE, Beta-VAE, FactorVAE</li>
+<li>Augoregressive Models: PixelCNN</li>
+<li>Diffusion Models: DDPM<br>
+目前对抗生成网络在遥感方面的应用</li>
+<li>遥感图超分辨率</li>
+<li>遥感图像分类</li>
+<li>伪遥感图的生成<br>
+DCGAN实验发现效果不理想<br>
+然后尝试使用Transformer模型代替传统卷积。</li>
+</ul>
+<h4 id="实验结果-2">实验结果</h4>
+<h5 id="2022年9月22日-22-28">2022年9月22日 22:28</h5>
+<p><img src="/legacy/imgs/cd51eb3ad5daf1eb1e0f1d73839b204f.png" alt="DCGAN in Remote Sense Images"></p>
+<blockquote>
+<p><em>总结</em> ：</p>
+<p>需加大Epoch数。但由于数据集过小，很难训练出一个很好的模型。实验证明，只要合理调整参数，<code>DCGAN</code>一样可以生成很好的伪遥感图…</p>
+<p>至于为什么上学期的实验总是不成功，我觉得可能的原因有：</p>
+<ol>
+<li>上学期的实验主要使用了<code>Tensorflow</code>，而且本学期换用了<code>Pytorch</code>；</li>
+<li>上学期参数调得不好，训练了很多轮但是效果总是不好，误认为传统的<code>CNN</code>网络做不了遥感；</li>
+<li>玄学问题（大虚。</li>
+</ol>
+</blockquote>
+<h5 id="2022年9月13日">2022年9月13日</h5>
+<p><img src="/legacy/imgs/ce41fcdfc8bb49334e814c06e3d88eaf.png" alt="Generator and Discriminator Loss"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/08/01/anti-spidering-gzip-bomb/" rel="prev" title="反爬虫的极致手段——利用Gzip压缩炸弹">
+                  <i class="fa fa-angle-left"></i> 反爬虫的极致手段——利用Gzip压缩炸弹
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/03/02/gpu-server-internet-next/" rel="next" title="新GPU服务器联网指南">
+                  新GPU服务器联网指南 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">苏ICP备2021046226号-1 </a>
+      <img src="/foot-ga.avif" alt=""><a href="https://beian.mps.gov.cn/#/query/webSearch?code=32100302011190" rel="noopener" target="_blank">苏公网安备32100302011190号 </a>
+  </div>
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">落寒陌墨</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">55k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">50 分钟</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
